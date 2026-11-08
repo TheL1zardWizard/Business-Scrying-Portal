@@ -1,3 +1,4 @@
+<!-- Business Scrying Portal. Copyright (c) 2026 theL1zardWizard. All rights reserved. See LICENSE. -->
 <meta charset="utf-8">
 <title>Business Scrying Portal</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -131,6 +132,7 @@ textarea{width:100%;font:12.5px/1.4 var(--mono);color:var(--ink);background:var(
 .rho-row b{text-align:right;font-variant-numeric:tabular-nums}
 h1 .ttl{display:grid;gap:1px}h1 .by{font:italic 12px/1.2 var(--sans);letter-spacing:.04em;color:var(--mute)}
 footer.meta .wrap{border-top:0;padding-bottom:6px}
+table.tos td{white-space:normal;vertical-align:top;font-size:12.5px;line-height:1.45;min-width:170px}
 footer.ad{max-width:1180px;margin:0 auto 28px;padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:center;color:var(--mute);font-size:12.5px;border-top:1px solid var(--line);text-align:center}
 footer.ad .disc{flex-basis:100%}footer.ad .disc a{color:var(--gold);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
 footer.ad .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:none}
@@ -254,6 +256,13 @@ a.btn.gold:hover{background:var(--gold);color:var(--on-accent)}
       <p class="hint" style="margin-top:0">The portal only works with <b>your own Limited Access key</b>. Create one in Torn under Preferences, API. Public and Minimal keys cannot read your company, and Full keys are refused on purpose so this app can never do more than read. The key is checked with Torn before it is saved, lives only in <code>config.json</code> on this PC and is never sent to this page.</p>
       <div class="tools"><label class="pick" for="liveKey">API key <input type="password" id="liveKey" autocomplete="off" size="22" placeholder="paste your own key"></label><button id="liveSave">Save and verify</button><button id="liveClear" hidden>Remove key</button></div>
       <p id="keyMsg" class="hint"></p>
+      <h3>Torn API disclosure (as Torn's API rules ask)</h3>
+      <div class="tablewrap"><table class="tos"><thead><tr><th class="l">Data storage</th><th class="l">Data sharing</th><th class="l">Purpose of use</th><th class="l">Key storage &amp; sharing</th><th class="l">Key access level</th></tr></thead><tbody><tr>
+        <td class="l">Everything stays on this PC: your company's numbers and the company data you refresh are saved in the <code>userdata</code> folder. No server, no account.</td>
+        <td class="l">None. Nothing is sent anywhere except requests to api.torn.com. No analytics, no tracking.</td>
+        <td class="l">Personal use only: read your own company and Torn's public company list to compare star-rating thresholds. It never sells, charges or trades anything.</td>
+        <td class="l">Saved in plain text in <code>config.json</code> next to the program, never shown to this page and never shared. Keys Torn rejects are not retried.</td>
+        <td class="l">Limited Access (read only). Used: key info, your company profile and detailed, company search by type, company types list.</td></tr></tbody></table></div>
     </div>
     <div class="card">
       <h2>Refresh the sample data</h2>
@@ -297,7 +306,7 @@ a.btn.gold:hover{background:var(--gold);color:var(--on-accent)}
     </div>
   </section>
 </div></main>
-<footer class="meta"><div class="wrap">Business Scrying Portal · Conjured by: theL1zardWizard · data from the official Torn API · <span id="foot"></span></div></footer>
+<footer class="meta"><div class="wrap">Business Scrying Portal · Conjured by: theL1zardWizard · © 2026 theL1zardWizard · data from the official Torn API · <span id="foot"></span></div></footer>
 <footer class="ad"><span class="dot" aria-hidden="true"></span>
   <span>&#10022; From theL1zardWizard: if the Wizard helped you out, come give a follow and say hello on Twitch!</span>
   <a class="btn gold" href="https://www.twitch.tv/thel1zardwizard_ttv" target="_blank" rel="noopener noreferrer">Follow theL1zardWizard on Twitch &#8599;</a>
