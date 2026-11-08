@@ -1,3 +1,4 @@
+# Copyright (c) 2026 theL1zardWizard. All rights reserved. See the LICENSE file.
 """Analysis, snapshot archive and mover tracking for Business Scrying Portal (standard library only).
 
 A "row" is one company: [id, rating, days_old, hired, capacity, daily_income, weekly_income,

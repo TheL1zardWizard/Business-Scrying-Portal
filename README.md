@@ -43,6 +43,15 @@ purpose, so the app can never do more than read. The key must belong to the play
 - **Sharing this folder:** delete `config.json` and the `userdata` folder first. Every friend uses their own key.
 - It reads data only. It cannot trade, send, hire, fire or change anything.
 
+## Torn API disclosure (per Torn's API rules)
+
+| Data storage | Data sharing | Purpose of use | Key storage & sharing | Key access level |
+|---|---|---|---|---|
+| Only on your PC (`userdata/`, `config.json`). No server or account. | None. Requests go to api.torn.com only. | Personal: read your own company and Torn's public company list to compare star thresholds. | Plain text in `config.json`, never shown to the page, never shared. A key Torn rejects (wrong, disabled or paused) is not retried until you save a new one. | Limited Access (read only). Used: key info, your company profile and detailed, company search by type, company types list. |
+
+Rate: refreshes run at about one request a second, well under Torn's 100 requests a minute per user. It never uses cache-busting parameters,
+never opens more than one refresh at a time, and never scrapes torn.com pages.
+
 ## Honest caveats
 
 - The bundled ladder is a **snapshot** (Nov 6, 2026) collected through the official API. Press Refresh for current numbers.
@@ -53,6 +62,12 @@ purpose, so the app can never do more than read. The key must belong to the play
 - Popularity, efficiency, environment, trains and ad budget are only visible for your own company. They are shown as
   context in the advice, not used to compute the star.
 - Weekly "what it takes" projections assume the day that drops out of your week equals your weekly average, unless you have logged seven daily pulls that add up to your weekly figure. It is an estimate.
+
+## License
+
+Copyright (c) 2026 theL1zardWizard. All rights reserved. Free to use, and free to share with anyone as long as it is the complete,
+unmodified package with every credit and the footer intact. No selling or charging for it, no editing or adapting it, no removing credits. Full text in `LICENSE`.
+This is an unofficial fan tool, not affiliated with Torn.
 
 ## Troubleshooting
 

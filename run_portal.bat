@@ -1,4 +1,5 @@
 @echo off
+REM Copyright (c) 2026 theL1zardWizard. All rights reserved. See the LICENSE file.
 cd /d "%~dp0"
 title Business Scrying Portal
 where py >nul 2>nul

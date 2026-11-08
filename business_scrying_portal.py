@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 theL1zardWizard. All rights reserved. See the LICENSE file.
 """Business Scrying Portal, Conjured by: theL1zardWizard
 
 A local dashboard that shows what each company type needs for 1-10 stars, and rates YOUR company
@@ -35,6 +36,7 @@ PACE = float(os.environ.get("PORTAL_PACE", "1.0"))   # seconds between search ca
 GAP_ALL, GAP_ONE = (0, 0) if os.environ.get("PORTAL_NO_GAP") else (300, 60)   # minimum seconds between refresh runs
 KEY_RE = re.compile(r"[A-Za-z0-9]{16}")
 COMMENT = "BusinessScryingPortal"
+DEAD_CODES = (2, 13, 18)           # incorrect key, key disabled for inactivity, key paused: never retry these automatically (Torn: repeated invalid-key calls can get an IP banned)
 
 TORN_ERRORS = {
     2: "Torn says the API key is incorrect. Check it and save it again.",
@@ -102,6 +104,7 @@ class App:
         self.info = None                   # validated key info (access level, user id, company id)
         self.key_error = None
         self.info_try = 0.0
+        self.key_dead = False              # set when Torn rejects the saved key; cleared only by saving a different key
         self.info_ok = 0.0
         self.last_fetch = 0.0
         self.last_try = 0.0
@@ -142,6 +145,10 @@ class App:
         if isinstance(j, dict) and "error" in j:
             err = j["error"] or {}
             code = err.get("code") if isinstance(err, dict) else None
+            if code in DEAD_CODES and q["key"] == self.key:
+                self.key_dead = True
+                self.key_error = TORN_ERRORS.get(code)
+                self.info = None
             raise AppError(TORN_ERRORS.get(code) or "Torn error %s: %s" % (code, (err.get("error") if isinstance(err, dict) else err)), code=code)
         return j
 
@@ -164,6 +171,8 @@ class App:
             return
         if not self.key:
             raise AppError("Enter your own Limited Access API key on the Data tab first.")
+        if self.key_dead:
+            raise AppError((self.key_error or "Torn rejected the saved key.") + " No further requests are sent until you save a new key.")
         now = time.time()
         if self.info and not force and now - self.info_ok < 600:
             return
@@ -180,7 +189,7 @@ class App:
             raise
 
     def state(self):
-        if self.key and self.info is None and not self.demo and time.time() - self.info_try > 30 and not self.progress.get("running"):
+        if self.key and self.info is None and not self.key_dead and not self.demo and time.time() - self.info_try > 30 and not self.progress.get("running"):
             try:
                 self._ensure_info()
             except AppError:
@@ -199,6 +208,7 @@ class App:
             self.info = self.check_key(key)          # refuses non-Limited keys before anything is stored
             self.info_ok = time.time()
             self.key_error = None
+            self.key_dead = False
         with self.lock:
             self.config_path.write_text(json.dumps({"api_key": key}, indent=2), "utf-8")
             try:
@@ -208,6 +218,8 @@ class App:
             self.key = key
             if not key:
                 self.info = None
+                self.key_dead = False
+                self.key_error = None
             self.cache = None
             self.last_fetch = 0.0
             self.last_try = 0.0
