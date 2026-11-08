@@ -4,7 +4,8 @@ Shows what every Torn company type needs for 1 to 10 stars (weekly or daily), an
 against that sample: where it sits now, what it takes to keep its star, and what it takes to reach 10.
 **It advises; you run the company.**
 
-Like it? Follow theL1zardWizard on Twitch: https://www.twitch.tv/thel1zardwizard_ttv
+Like it? Come say hello: follow theL1zardWizard on Twitch (https://www.twitch.tv/thel1zardwizard_ttv) or join the Discord
+(https://discord.gg/thel1zardwizard). Technical questions are welcome in the Discord too (see "Questions and support" at the bottom).
 
 ## Start it
 
@@ -75,3 +76,11 @@ This is an unofficial fan tool, not affiliated with Torn.
 - *Port busy*: it tries 8780 to 8789 automatically. The address is printed in the black window.
 - *Torn error messages* (wrong key, access too low, key paused) are shown in plain words under the key box.
 - *Refresh stopped part-way*: types finished before the stop are kept. Start it again later; Torn's own limits or a paused key are the usual cause.
+
+## Questions and support
+
+- **Enjoying the Business Scrying Portal?** Follow theL1zardWizard on Twitch: https://www.twitch.tv/thel1zardwizard_ttv
+  and say hello in the Discord: https://discord.gg/thel1zardwizard
+- **Technical questions, bugs or ideas?** Ask in the Discord: https://discord.gg/thel1zardwizard
+  Tell me which launcher you used, what you clicked, and the exact message shown (never post your API key).
+- **Torn questions** (rules, API keys) are best asked in Torn itself or at the official Torn API page: https://www.torn.com/api.html
