@@ -1,0 +1,756 @@
+<meta charset="utf-8">
+<title>Business Scrying Portal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="portal-token" content="__TOKEN__">
+<style>
+/* Layout: sticky masthead with type selector, underlined tab bar, one working view at a time.
+   Theme: carried over from Torn Stock Wizard (parchment light / black-and-gold dark, Georgia display, starfield). */
+:root{--bg:#f2eee4;--card:#faf7ef;--ink:#17150f;--mute:#6d6655;--line:#ddd4c0;--good:#1f7a5a;--good-soft:#dcebe1;--bad:#a8372a;--bad-soft:#f1dad4;
+--accent:#8a6a1f;--accent-soft:#efe5c8;--on-accent:#f5e7bd;--gold:#a9822c;--warn:#f3e8c6;--warn-ink:#6b4e08;--err:#f3dcd6;--err-ink:#7d2418;--stars:0;
+--serif:Georgia,"Palatino Linotype","Book Antiqua",Palatino,serif;--sans:"Helvetica Neue",Helvetica,"Segoe UI",Arial,sans-serif;--mono:ui-monospace,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08080a;--card:#111114;--ink:#ece6d8;--mute:#9a927f;--line:#27241d;--good:#62c79d;--good-soft:#10261d;--bad:#e5806e;--bad-soft:#2d1814;
+--accent:#d2ac52;--accent-soft:#221c0e;--on-accent:#14110a;--gold:#d2ac52;--warn:#2a2210;--warn-ink:#e3c46f;--err:#2c1612;--err-ink:#f0a999;--stars:1;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#08080a;--card:#111114;--ink:#ece6d8;--mute:#9a927f;--line:#27241d;--good:#62c79d;--good-soft:#10261d;--bad:#e5806e;--bad-soft:#2d1814;
+--accent:#d2ac52;--accent-soft:#221c0e;--on-accent:#14110a;--gold:#d2ac52;--warn:#2a2210;--warn-ink:#e3c46f;--err:#2c1612;--err-ink:#f0a999;--stars:1;color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);position:relative;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:var(--stars);
+background-image:radial-gradient(1.2px 1.2px at 8% 14%,rgba(210,172,82,.7),transparent),radial-gradient(1px 1px at 21% 62%,rgba(236,230,216,.45),transparent),
+radial-gradient(1.4px 1.4px at 34% 28%,rgba(210,172,82,.55),transparent),radial-gradient(1px 1px at 47% 84%,rgba(236,230,216,.4),transparent),
+radial-gradient(1.2px 1.2px at 63% 18%,rgba(236,230,216,.5),transparent),radial-gradient(1.5px 1.5px at 77% 54%,rgba(210,172,82,.6),transparent),
+radial-gradient(1px 1px at 88% 24%,rgba(236,230,216,.45),transparent),radial-gradient(1.2px 1.2px at 93% 78%,rgba(210,172,82,.5),transparent),
+radial-gradient(1px 1px at 14% 92%,rgba(236,230,216,.4),transparent),radial-gradient(1.3px 1.3px at 56% 47%,rgba(210,172,82,.35),transparent)}
+.safe{position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--card);z-index:10}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header,nav,main,footer{position:relative;z-index:1}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border-bottom:1px solid transparent;border-image:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold) 80%,transparent) 1}
+header .wrap{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding-block:12px}
+h1{font:400 21px/1.2 var(--serif);letter-spacing:.02em;margin:0;display:flex;gap:12px;align-items:center;min-width:0}
+h1 svg{color:var(--gold);flex:none}
+h2{font:400 17px/1.3 var(--serif);letter-spacing:.02em;margin:0 0 10px;text-wrap:balance}
+h3{font-weight:500;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:18px 0 8px}
+.bar{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;color:var(--mute);font-size:13px}
+label.pick{display:flex;gap:8px;align-items:center;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+select,input[type=text],button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:2px;padding:6px 10px}
+select{max-width:100%;min-width:0}
+#typeSel{font-size:15px;font-family:var(--serif);border-color:var(--gold);padding:7px 12px;min-width:220px}
+button{cursor:pointer}button:hover,select:hover{border-color:var(--gold)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pill{font-size:10px;padding:2px 8px;border-radius:2px;border:1px solid var(--line);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:500;white-space:nowrap}
+.pill.live{border-color:var(--good);color:var(--good)}
+nav .wrap{display:flex;gap:2px;flex-wrap:wrap;padding-top:14px}
+nav a{color:var(--mute);text-decoration:none;text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:500;padding:10px 14px;border-bottom:1px solid transparent}
+nav a:hover{color:var(--ink)}
+nav a.on{color:var(--gold);border-bottom:2px solid var(--gold)}
+main .wrap{display:grid;gap:16px;padding-block:14px 48px;grid-template-columns:minmax(0,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:20px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{min-width:0}
+.kpi .l{text-transform:uppercase;letter-spacing:.14em;font-size:10.5px;color:var(--mute)}
+.kpi .v{font:400 26px/1.25 var(--serif);margin-top:2px;overflow-wrap:anywhere}
+.kpi .s{font-size:12.5px;color:var(--mute)}
+.hint{color:var(--mute);font-size:12.5px;margin:8px 0 0;max-width:78ch}
+.msg{padding:10px 14px;border-radius:2px;background:var(--warn);color:var(--warn-ink)}
+.msg.err{background:var(--err);color:var(--err-ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);background:var(--card);user-select:none}
+th{white-space:normal;vertical-align:bottom;line-height:1.3}
+th.sort{cursor:pointer}th.sort:hover{color:var(--gold)}
+th.l,td.l{text-align:left}
+tbody tr:hover{background:var(--accent-soft)}
+td.star{font:400 19px/1 var(--serif);color:var(--gold);text-align:left}
+td.dim{color:var(--mute)}
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border-radius:2px;background:var(--line);color:var(--mute)}
+.badge.good{background:var(--good-soft);color:var(--good)}.badge.bad{background:var(--bad-soft);color:var(--bad)}.badge.warn{background:var(--warn);color:var(--warn-ink)}
+.tools{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:inline-flex}
+.seg button{border-radius:0;margin-left:-1px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--gold);border-color:var(--gold);color:var(--on-accent);position:relative}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+/* range chart */
+.rc{display:grid;gap:6px}
+.rc-row{display:grid;grid-template-columns:44px minmax(0,1fr) 92px;gap:10px;align-items:center}
+.rc-row .st{font:400 17px/1 var(--serif);color:var(--gold)}
+.rc-row .val{font-size:12px;color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}
+.rc-track{position:relative;height:24px;background:
+ repeating-linear-gradient(90deg,transparent 0,transparent calc(20% - 1px),var(--line) calc(20% - 1px),var(--line) 20%)}
+.rc-track .w{position:absolute;top:11px;height:2px;background:var(--mute);opacity:.6}
+.rc-track .b{position:absolute;top:4px;height:16px;background:var(--accent-soft);border:1px solid var(--gold)}
+.rc-track .m{position:absolute;top:2px;width:2px;height:20px;background:var(--ink);transform:translateX(-1px)}
+.rc-track .c{position:absolute;top:6px;width:11px;height:11px;background:var(--bad);transform:translateX(-5px) rotate(45deg);border:1px solid var(--card)}
+.rc-axis{display:grid;grid-template-columns:44px minmax(0,1fr) 92px;gap:10px;margin-top:2px}
+.rc-axis div.t{position:relative;height:16px;font-size:11px;color:var(--mute)}
+.rc-axis .t span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.rc-axis .t span:first-child{transform:none}.rc-axis .t span:last-child{transform:translateX(-100%)}
+.legend{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-top:12px}
+.legend i{display:inline-block;vertical-align:-3px;margin-right:6px}
+.legend .k1{width:22px;height:10px;background:var(--accent-soft);border:1px solid var(--gold)}
+.legend .k2{width:2px;height:14px;background:var(--ink)}
+.legend .k3{width:9px;height:9px;background:var(--bad);transform:rotate(45deg)}
+.legend .k4{width:22px;height:2px;background:var(--mute);opacity:.7;vertical-align:3px}
+/* lists */
+.list{list-style:none;margin:0;padding:0}
+.list li{padding:8px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:baseline}
+.list .st{font:400 17px/1 var(--serif);color:var(--gold)}
+.list .sub{color:var(--mute);font-size:12.5px}
+a{color:var(--gold)}
+/* heat table */
+td.h{text-align:right;font-size:12.5px}
+td.thin{color:var(--mute);font-style:italic}
+tr.sel td.l a{font-weight:700}
+tr.sel{background:var(--accent-soft)}
+footer .wrap{padding-block:14px 28px;color:var(--mute);font-size:12.5px;text-align:center;border-top:1px solid var(--line)}
+.method p,.method li{max-width:78ch}
+.method ul{padding-left:18px;margin:6px 0}
+code{font-family:var(--mono);font-size:12.5px;background:var(--accent-soft);padding:1px 5px;border-radius:2px;overflow-wrap:anywhere}
+#perSeg{margin-left:4px}
+input[type=password]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:2px;padding:6px 10px}
+textarea{width:100%;font:12.5px/1.4 var(--mono);color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:2px;padding:8px 10px;resize:vertical}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:10px 14px}
+.fld{display:grid;gap:4px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);min-width:0}
+.fld.wide{grid-column:span 2}
+.fld input,.fld select{font-size:14px;letter-spacing:0;text-transform:none;width:100%;min-width:0}
+.verdict{border-left:4px solid var(--line)}
+.verdict.good{border-left-color:var(--good)}.verdict.warn{border-left-color:var(--warn-ink)}.verdict.bad{border-left-color:var(--bad)}
+.verdict .vh{display:flex;gap:16px;align-items:center}
+.verdict .vs{font:400 40px/1 var(--serif);color:var(--gold)}
+.verdict .vn{font-size:12.5px;color:var(--mute)}
+.verdict h2{margin:2px 0 0;font-size:22px}
+.verdict p{margin:10px 0 0;max-width:78ch}
+.dim{color:var(--mute)}
+.acts{margin:0;padding-left:20px;display:grid;gap:10px;max-width:84ch}
+.plain{margin:0;padding-left:18px;display:grid;gap:8px;max-width:84ch}
+.rho{display:grid;gap:8px}
+.rho-row{display:grid;grid-template-columns:minmax(120px,210px) minmax(0,1fr) 52px;gap:12px;align-items:center}
+.rho-t{height:12px;background:var(--line);position:relative}
+.rho-f{height:100%;background:var(--gold)}.rho-f.neg{background:var(--bad)}
+.rho-row b{text-align:right;font-variant-numeric:tabular-nums}
+h1 .ttl{display:grid;gap:1px}h1 .by{font:italic 12px/1.2 var(--sans);letter-spacing:.04em;color:var(--mute)}
+footer.meta .wrap{border-top:0;padding-bottom:6px}
+footer.ad{max-width:1180px;margin:0 auto 28px;padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:center;color:var(--mute);font-size:12.5px;border-top:1px solid var(--line);text-align:center}
+footer.ad .disc{flex-basis:100%}footer.ad .disc a{color:var(--gold);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+footer.ad .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:none}
+a.btn.gold{color:var(--gold);border:1px solid var(--gold);border-radius:2px;text-decoration:none;text-transform:uppercase;letter-spacing:.1em;font-size:11px;padding:6px 12px}
+a.btn.gold:hover{background:var(--gold);color:var(--on-accent)}
+.meter{height:10px;background:var(--line);border-radius:1px;margin:10px 0 2px;overflow:hidden}
+.meter div{height:100%;width:0;background:var(--gold);transition:width .4s}
+[hidden]{display:none!important}
+@media (max-width:560px){h1{font-size:18px}#typeSel{min-width:0;width:100%}label.pick{width:100%;flex-wrap:wrap}.card{padding:14px}.fld.wide{grid-column:auto}.rho-row{grid-template-columns:minmax(0,1fr) 90px 44px;gap:8px}.verdict .vs{font-size:32px}.rc-row,.rc-axis{grid-template-columns:34px minmax(0,1fr) 70px;gap:6px}}
+@media (prefers-reduced-motion:no-preference){main section{animation:in .18s ease-out}@keyframes in{from{opacity:.4}to{opacity:1}}}
+</style>
+<div class="safe"></div>
+<header><div class="wrap">
+  <h1><svg viewBox="0 0 40 40" width="36" height="36" aria-hidden="true"><circle cx="20" cy="20" r="18.5" fill="none" stroke="currentColor" stroke-width="1"/><path d="M20 8.5l3.4 7.2 7.8 1-5.7 5.4 1.5 7.8L20 26l-7 3.9 1.5-7.8-5.7-5.4 7.8-1z" fill="currentColor"/></svg><span class="ttl">Business Scrying Portal<span class="by">Conjured by: theL1zardWizard</span></span></h1>
+  <div class="bar">
+    <label class="pick" for="typeSel">Company type
+      <select id="typeSel" aria-label="Company type"></select></label>
+    <div class="seg" id="perSeg" role="group" aria-label="Period"><button data-p="wk" class="on">Weekly</button><button data-p="day">Daily</button></div>
+    <span id="snap" class="pill live">loading</span>
+  </div>
+</div></header>
+<nav aria-label="Views"><div class="wrap" id="tabs"></div></nav>
+<main><div class="wrap">
+  <div id="status" class="msg" hidden></div>
+  <section id="v-ladder" hidden>
+    <div class="kpis" id="kpis"></div>
+    <div class="card" style="margin-top:16px">
+      <h2 id="ladderTitle">Star ladder</h2>
+      <div class="tablewrap"><table id="ladder"></table></div>
+      <p class="hint" id="ladderHint"></p>
+    </div>
+  </section>
+  <section id="v-mine" hidden>
+    <div class="card" id="liveCard" hidden style="margin-bottom:16px">
+      <h2>Live from Torn</h2>
+      <p class="hint" style="margin-top:0">Reads your own company (profile and detailed) with the key saved on the <a href="#data">Data tab</a>, at most once every 30 seconds.</p>
+      <div class="tools"><button id="liveFetch">Fetch my company</button></div>
+      <p id="liveMsg" class="hint"></p>
+    </div>
+    <div id="mineOut"></div>
+    <div class="card" id="histCard" hidden style="margin-top:16px">
+      <h2>Your history on this PC</h2>
+      <div class="tablewrap"><table id="histTable"></table></div>
+      <p class="hint">One row per pull. Compare the rows either side of a Sunday to see what actually moved your star.</p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Your company's numbers</h2>
+      <p class="hint" style="margin-top:0">Press Fetch my company above to fill these in from Torn, or type your numbers by hand and the read re-runs as you go. Everything stays on this PC.</p>
+      <div class="formgrid" id="myForm"></div>
+      <h3>Or paste an API response</h3>
+      <p class="hint" style="margin-top:0">Open <code>https://api.torn.com/company/?selections=profile,detailed&amp;key=YOUR_KEY</code> in your browser, copy the whole response and paste it here. The response does not contain your key, and this page never asks for it.</p>
+      <textarea id="myPaste" rows="4" placeholder='{"company":{...},"company_detailed":{...}}' aria-label="API response"></textarea>
+      <div class="tools" style="margin-top:8px"><button id="myParse">Load pasted data</button><button id="myReset">Clear</button></div>
+      <p class="hint" id="myMsg"></p>
+    </div>
+  </section>
+  <section id="v-ranges" hidden>
+    <div class="card">
+      <h2 id="rangeTitle">Where each star sits</h2>
+      <div class="tools"><div class="seg" id="metricSeg"><button data-m="wi" class="on">Income</button><button data-m="wc">Customers</button></div></div>
+      <div class="rc" id="rc"></div>
+      <div class="rc-axis"><span></span><div class="t" id="rcAxis"></div><span></span></div>
+      <div class="legend"><span><i class="k4"></i>5th to 95th percentile</span><span><i class="k1"></i>middle half (25th to 75th)</span><span><i class="k2"></i>median</span><span><i class="k3"></i>earn line</span></div>
+      <p class="hint">Each row is every company currently holding that star. Overlap between neighbouring rows is why a star cannot be read from one number. Where the boxes barely touch (the top stars for most types), a threshold is sharp.</p>
+    </div>
+  </section>
+  <section id="v-drivers" hidden>
+    <div class="card">
+      <h2 id="drvTitle">Drivers</h2>
+      <div class="rho" id="rho"></div>
+      <p class="hint">Spearman rank correlation between a metric and the star rating across every rated company of this type: +1.00 rises with the star in lockstep, 0 is unrelated, negative falls as stars rise. Tracking a star is not the same as causing it.</p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Typical value at each star</h2>
+      <div class="tablewrap"><table id="drvTable"></table></div>
+      <p class="hint">Seats filled is the median share of staff seats occupied. Open to applicants is the share of companies currently hiring. Daily pace compares each company's last day with its own weekly average; 100% is steady.</p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>What Torn does not publish</h2>
+      <ul class="plain">
+        <li>Only your own company shows popularity, efficiency, environment, funds, trains, advertising budget, upgrades and value. For everyone else these are hidden, so they cannot be sampled.</li>
+        <li>Stars follow gross profit, and the highest star a company can hold depends on its lifetime gross revenue. Both come from the <a href="https://wiki.torn.com/wiki/Company" target="_blank" rel="noopener">Torn wiki</a>. The revenue cap is not public.</li>
+        <li>Popularity is your weekly income as a percentage of the best company of your type. It follows income and does not drive it. Efficiency is the average effectiveness of employees. Environment depends on staff room size and head count, and drug users and inactive employees lower it.</li>
+        <li>Advertising has a base effect of up to 40% that shrinks when more rivals of the same type advertise. Employee pay does not affect the star rating.</li>
+        <li>The My company tab combines your own hidden figures with the sampled lines, so you see both halves.</li>
+      </ul>
+    </div>
+  </section>
+  <section id="v-watch" hidden>
+    <div class="two">
+      <div class="card"><h2>Under their star's earn line</h2><p class="hint" style="margin-top:0">Most likely to drop at the next rating update. Lowest first.</p><div id="riskList"></div></div>
+      <div class="card"><h2>Over the next star's earn line</h2><p class="hint" style="margin-top:0">Highest first. Only shown if old enough to match the youngest companies seen at that star.</p><div id="riseList"></div></div>
+    </div>
+    <p class="hint">Ratings change on Sundays. Re-collect after the next update and compare these names: the ones that moved are the real thresholds.</p>
+    <p class="hint" id="watchNote"></p>
+  </section>
+  <section id="v-explorer" hidden>
+    <div class="card">
+      <h2>Company explorer</h2>
+      <div class="tools">
+        <label class="pick" for="fStar">Star <select id="fStar"></select></label>
+        <label class="pick" for="fTag">Group <select id="fTag"><option value="">All</option><option value="R">Under earn line</option><option value="U">Over next line</option><option value="S">Sample</option></select></label>
+        <label class="pick" for="fId">Company ID <input type="text" id="fId" inputmode="numeric" placeholder="e.g. 10" size="8"></label>
+        <span class="pill" id="exCount"></span>
+      </div>
+      <div class="tablewrap"><table id="ex"></table></div>
+      <p class="hint">A curated slice of each type: the watchlist names plus an even sample across every star. Company IDs open the in-game profile.</p>
+    </div>
+  </section>
+  <section id="v-types" hidden>
+    <div class="card">
+      <h2 id="typesTitle">Income needed, every company type</h2>
+      <div class="tools"><div class="seg" id="sortSeg"><button data-s="name" class="on">A to Z</button><button data-s="s10">Highest 10-star line</button><button data-s="s10lo">Lowest 10-star line</button></div></div>
+      <div class="tablewrap"><table id="heat"></table></div>
+      <p class="hint">Earn line per star in income for the period chosen at the top. Italic cells rest on fewer than 8 companies, or sit below the line of the star beneath them (noisy). Click a type name to open its full ladder.</p>
+    </div>
+  </section>
+  <section id="v-data" hidden>
+    <div class="card">
+      <h2>Your Torn API key</h2>
+      <p class="hint" style="margin-top:0">The portal only works with <b>your own Limited Access key</b>. Create one in Torn under Preferences, API. Public and Minimal keys cannot read your company, and Full keys are refused on purpose so this app can never do more than read. The key is checked with Torn before it is saved, lives only in <code>config.json</code> on this PC and is never sent to this page.</p>
+      <div class="tools"><label class="pick" for="liveKey">API key <input type="password" id="liveKey" autocomplete="off" size="22" placeholder="paste your own key"></label><button id="liveSave">Save and verify</button><button id="liveClear" hidden>Remove key</button></div>
+      <p id="keyMsg" class="hint"></p>
+    </div>
+    <div class="card">
+      <h2>Refresh the sample data</h2>
+      <div class="tools"><label class="pick" for="rfScope">Refresh <select id="rfScope"><option value="type">The selected company type</option><option value="all">All company types</option></select></label><button id="rfStart">Refresh now</button><button id="rfCancel" hidden>Cancel</button></div>
+      <div class="meter" id="rfMeter" hidden><div id="rfBar"></div></div>
+      <p id="rfMsg" class="hint"></p><ul class="plain" id="rfLog"></ul>
+      <p class="hint">A refresh re-collects every rated company of the chosen type from Torn's official company search (100 per request, about one request a second, inside Torn's limit), recomputes every line and archives the raw snapshot under <code>userdata/history</code>. Please leave at least 5 minutes after a full refresh and 1 minute after a single type. It runs in the background, so you can keep using the portal.</p>
+      <div class="msg" id="keyGate" hidden>Add your own Limited Access key above to unlock refresh and My company.</div>
+    </div>
+    <div class="card">
+      <h2>Collected so far</h2>
+      <div class="tablewrap"><table id="runsTable"></table></div>
+      <p class="hint">Every refresh is kept as a compressed snapshot, so older numbers can always be looked up and compared.</p>
+    </div>
+    <div class="card">
+      <h2 id="hxTitle">How the lines moved</h2>
+      <div class="tablewrap"><table id="trendTable"></table></div>
+      <h3>What actually moved (selected type)</h3>
+      <div class="tablewrap"><table id="moveTable"></table></div>
+      <p class="hint">Ratings change on Sundays. Between two snapshots that straddle a Sunday, every company that went up or down is recorded with its weekly income and customers from the earlier snapshot. These observed numbers replace guesswork about demotion lines, and My company uses them as they build up.</p>
+    </div>
+  </section>
+  <section id="v-method" hidden class="method">
+    <div class="card">
+      <h2>How this was built</h2>
+      <ul>
+        <li>Every number comes from the official Torn API v2 company search, filtered by company type and star rating. No torn.com page was loaded or scraped, and no key is stored in this page.</li>
+        <li>Requests were paced at about one per second, well under the 100 per minute limit, using only the fields each company row needs.</li>
+        <li>For each type, every company with at least 1 star was collected. A first page of unrated (0 star) companies was added as a reference for the 1-star line.</li>
+        <li>Daily figures are each company's own last reported day, collected in the same pass. Spearman correlations, company age, seats filled, hiring status, income per customer and daily pace come from the same rows.</li>
+        <li>My company reads your own profile (company, detailed) with the key you save on this PC. The key stays in config.json and is never sent to this page. Staff names and ids are dropped before the page sees anything.</li>
+        <li>An earn line is the cut that best separates one star from the star below it (balanced accuracy). Signal quality is the AUC of that separation: sharp is 0.85 or more, moderate 0.70 or more, fuzzy below that.</li>
+      </ul>
+      <h3>Read these limits first</h3>
+      <ul>
+        <li>This is one snapshot. Weekly income and customers are rolling figures, while ratings only change on Sundays, so some companies look out of place for a few days.</li>
+        <li>Demotion lines are inferred from where current holders sit. No actual star losses have been observed yet. A second snapshot after a Sunday update will show real movers.</li>
+        <li>Middle stars overlap heavily on income and customers. Age and other inputs Torn does not publish also matter, so treat middle lines as ranges.</li>
+        <li>Types with few companies at a star give weak lines. Those are marked Thin, and a line that falls below the star beneath it is marked Noisy.</li>
+      </ul>
+    </div>
+  </section>
+</div></main>
+<footer class="meta"><div class="wrap">Business Scrying Portal · Conjured by: theL1zardWizard · data from the official Torn API · <span id="foot"></span></div></footer>
+<footer class="ad"><span class="dot" aria-hidden="true"></span>
+  <span>&#10022; From theL1zardWizard: if the Wizard helped you out, come give a follow and say hello on Twitch!</span>
+  <a class="btn gold" href="https://www.twitch.tv/thel1zardwizard_ttv" target="_blank" rel="noopener noreferrer">Follow theL1zardWizard on Twitch &#8599;</a>
+  <span class="disc">Check out the L1zardWizard's discord @ <a href="https://discord.gg/thel1zardwizard" target="_blank" rel="noopener noreferrer">https://discord.gg/thel1zardwizard</a></span></footer>
+<script>
+(function(){
+const VIEWS=[['ladder','Star ladder'],['mine','My company'],['ranges','Ranges'],['drivers','Drivers'],['watch','Watchlist'],['explorer','Explorer'],['types','All types'],['data','Data'],['method','Method']];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=k=>{if(k==null)return '–';if(k<=0)return '$0';if(k>=1e6)return '$'+(k/1e6).toFixed(2)+'B';if(k>=1000)return '$'+(k/1000).toFixed(k>=10000?1:2)+'M';return '$'+Math.round(k)+'K'};
+const usd=v=>v==null?'–':v>=1e6?'$'+(v/1e6).toFixed(2)+'M':v>=1e4?'$'+Math.round(v/1e3)+'K':v>=1e3?'$'+(v/1e3).toFixed(1)+'K':'$'+Math.round(v);
+const num=n=>n==null?'–':Number(n).toLocaleString('en-US');
+const ord=n=>n+((n%100>=11&&n%100<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
+const link=id=>'<a href="https://www.torn.com/joblist.php#/p=corpinfo&ID='+id+'" target="_blank" rel="noopener">'+id+'</a>';
+const state={index:null,x:{d:{},c:{},rho:{}},cur:null,metric:'wi',sort:'name',exSort:['star',-1],per:'wk'};
+let cache={};
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function status(t,err){const el=$('#status');el.hidden=!t;el.textContent=t||'';el.className='msg'+(err?' err':'')}
+const unit=()=>state.per==='wk'?'wk':'day';
+const noLine=st=>!st.cw[0]&&!st.cw[1];
+/* one star, seen through the chosen period: percentile arrays [p5,p25,p50,p75,p95] and the earn lines */
+function xs(d,s){const a=state.x.d[d.id];const e=a&&a[s-1];return e&&e.length>1?e:null}
+function pv(d,s,per){
+  const st=d.s[s];if(!st||!st.n||!st.wi)return null;per=per||state.per;
+  if(per==='wk')return{n:st.n,inc:[st.wi[1],st.wi[3],st.wi[4],st.wi[5],st.wi[7]],cust:[st.wc[1],st.wc[3],st.wc[4],st.wc[5],st.wc[7]],li:st.cw[0],ai:st.cw[1],lc:st.cc[0],ac:st.cc[1],below:st.rk[0],none:noLine(st)};
+  const e=xs(d,s);
+  if(!e)return{n:st.n,inc:[0,0,0,0,0],cust:[0,0,0,0,0],li:0,ai:0,lc:0,ac:0,below:0,none:true};
+  return{n:st.n,inc:e[0],cust:e[1],li:e[2][0],ai:e[2][1],lc:e[3][0],ac:e[3][1],below:e[4],none:!e[2][0]&&!e[2][1]};
+}
+function noisy(d,s,per){const a=pv(d,s,per),b=pv(d,s-1,per);return !!(a&&b&&s>1&&a.li<b.li)}
+function quality(d,s){const a=pv(d,s);if(!a||a.n<8)return['Thin','warn'];if(noisy(d,s))return['Noisy','bad'];const x=a.ai/1000;if(x>=.85)return['Sharp','good'];if(x>=.7)return['Moderate','warn'];return['Fuzzy','']}
+function stars(d){return Object.keys(d.s).map(Number).filter(n=>n>=1).sort((a,b)=>b-a)}
+function kpi(l,v,s){return '<div class="card kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+(s||'')+'</div></div>'}
+function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v)));const f=v/p;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p}
+/* ---- views ---- */
+function renderLadder(){
+  const d=state.cur,u=unit(),W=state.per==='wk'?'week':'day';$('#ladderTitle').textContent=d.name+': what each star takes, per '+W;
+  const s10=pv(d,10),s9=pv(d,9);
+  const sharp=stars(d).filter(s=>{const p=pv(d,s);return p&&p.n>=8&&!noisy(d,s)}).sort((a,b)=>pv(d,b).ai-pv(d,a).ai)[0];
+  $('#kpis').innerHTML=
+   kpi('Rated companies',num(d.rated),num(d.total-d.rated)+' unrated in reference sample')+
+   kpi('10-star earn line',s10&&!s10.none?money(s10.li)+' / '+u:'None yet',s10?num(s10.n)+' companies hold it':'no 10-star companies')+
+   kpi('9-star earn line',s9&&!s9.none?money(s9.li)+' / '+u:'None yet',s9?num(s9.n)+' companies hold it':'')+
+   kpi('Sharpest boundary',sharp?sharp+' star':'–',sharp?'signal '+(pv(d,sharp).ai/1000).toFixed(2):'');
+  let h='<thead><tr><th class="l">Star</th><th>Companies</th><th>Earn line<br>income / '+u+'</th><th>Comfort<br>25th pct</th><th>Typical</th><th>Earn line<br>customers / '+u+'</th><th>Youngest<br>seen</th><th>Under<br>the line</th><th class="l">Signal</th></tr></thead><tbody>';
+  for(const s of stars(d)){const p=pv(d,s);
+   if(!p){h+='<tr><td class="star">'+s+'★</td><td class="dim">0</td><td colspan="7" class="dim l">No companies at this star</td></tr>';continue}
+   const q=quality(d,s);
+   h+='<tr><td class="star">'+s+'★</td><td>'+num(p.n)+'</td><td><b>'+(p.none?'n/a':money(p.li))+'</b></td><td>'+money(p.inc[1])+'</td><td>'+money(p.inc[2])+'</td><td>'+(p.none?'n/a':num(p.lc))+'</td><td>'+num(d.s[s].ag[0])+' d</td><td>'+p.below+' <span class="dim">('+Math.round(100*p.below/p.n)+'%)</span></td><td class="l"><span class="badge '+q[1]+'">'+q[0]+'</span></td></tr>';}
+  $('#ladder').innerHTML=h+'</tbody>';
+  $('#ladderHint').textContent='Earn line: the '+W+'ly figure that best separates companies at this star from companies one star lower. Comfort: the 25th percentile of companies currently holding the star. Companies under the earn line are the likeliest to lose a star at the next Sunday update.'+(state.per==='day'?' Daily figures are each company\'s own last reported day, not the weekly figure divided by 7.':'');
+}
+function renderRanges(){
+  const d=state.cur,m=state.metric,list=stars(d).filter(s=>d.s[s].n),W=state.per==='wk'?'weekly':'daily';
+  $('#rangeTitle').textContent=d.name+': '+W+' '+(m==='wi'?'income':'customers')+' by star';
+  const key=m==='wi'?'inc':'cust',lk=m==='wi'?'li':'lc';
+  const max=niceMax(Math.max(...list.map(s=>pv(d,s)[key][4]))*1.04||1);
+  const fmt=m==='wi'?money:num;
+  const pct=v=>Math.max(0,Math.min(100,v/max*100));
+  let h='';
+  for(const s of list){const p=pv(d,s),a=p[key];
+   h+='<div class="rc-row"><span class="st">'+s+'★</span><div class="rc-track" title="'+s+' star: 5th '+fmt(a[0])+', median '+fmt(a[2])+', 95th '+fmt(a[4])+'">'+
+    '<div class="w" style="left:'+pct(a[0])+'%;width:'+(pct(a[4])-pct(a[0]))+'%"></div>'+
+    '<div class="b" style="left:'+pct(a[1])+'%;width:'+Math.max(.4,pct(a[3])-pct(a[1]))+'%"></div>'+
+    '<div class="m" style="left:'+pct(a[2])+'%"></div>'+
+    (p.none?'':'<div class="c" style="left:'+pct(p[lk])+'%"></div>')+'</div>'+
+    '<span class="val">'+fmt(a[2])+'</span></div>';}
+  $('#rc').innerHTML=h||'<p class="hint">No rated companies for this type.</p>';
+  let ax='';for(let i=0;i<=5;i++){ax+='<span style="left:'+(i*20)+'%">'+fmt(max*i/5)+'</span>'}
+  $('#rcAxis').innerHTML=ax;
+  document.querySelectorAll('#metricSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+}
+function renderWatch(){
+  const d=state.cur,u=unit();
+  const mk=tag=>{const rows=d.c.filter(r=>r[6]===tag);const by={};rows.forEach(r=>(by[r[1]]=by[r[1]]||[]).push(r));
+   const ks=Object.keys(by).map(Number).sort((a,b)=>b-a);
+   if(!ks.length)return '<p class="hint">Nobody in this group.</p>';
+   return '<ul class="list">'+ks.map(k=>by[k].map(r=>{const inc=state.per==='wk'?r[4]:r.dI,cu=state.per==='wk'?r[5]:r.dC;return '<li><span class="st">'+r[1]+'★</span><span>'+link(r[0])+'<div class="sub">'+num(r[2])+' days old · '+r[3]+' staff · '+num(cu)+' customers/'+u+'</div></span><b>'+money(inc)+'</b></li>'}).join('')).join('')+'</ul>'};
+  $('#riskList').innerHTML=mk('R');$('#riseList').innerHTML=mk('U');
+  $('#watchNote').textContent=state.per==='day'?'Daily view shows each company\'s own last reported day. The groups themselves are still decided on the weekly earn lines, because that is what the rating follows.':'';
+}
+function renderExplorer(){
+  const d=state.cur,fs=$('#fStar').value,ft=$('#fTag').value,fi=$('#fId').value.trim(),u=unit();
+  const A={id:r=>r[0],star:r=>r[1],age:r=>r[2],staff:r=>r[3],inc:r=>state.per==='wk'?r[4]:(r.dI||0),cust:r=>state.per==='wk'?r[5]:(r.dC||0),tag:r=>r[6]};
+  let rows=d.c.filter(r=>(!fs||r[1]==fs)&&(!ft||r[6]===ft)&&(!fi||String(r[0]).includes(fi)));
+  const [col,dir]=state.exSort,f=A[col];
+  rows=rows.slice().sort((a,b)=>(f(a)>f(b)?1:f(a)<f(b)?-1:0)*dir||a[0]-b[0]);
+  const cols=[['id','Company'],['star','Star'],['age','Age (days)'],['staff','Staff'],['inc',(state.per==='wk'?'Weekly':'Daily')+' income'],['cust',(state.per==='wk'?'Weekly':'Daily')+' customers'],['tag','Group']];
+  let h='<thead><tr>'+cols.map(c=>'<th class="sort'+(c[0]==='id'||c[0]==='tag'?' l':'')+'" data-c="'+c[0]+'">'+c[1]+(state.exSort[0]===c[0]?(dir>0?' ▲':' ▼'):'')+'</th>').join('')+'</tr></thead><tbody>';
+  const tl={R:['Under line','bad'],U:['Over next line','good'],S:['Sample','']};
+  for(const r of rows){h+='<tr><td class="l">'+link(r[0])+'</td><td class="star" style="text-align:right">'+r[1]+'★</td><td>'+num(r[2])+'</td><td>'+r[3]+'</td><td>'+money(A.inc(r))+'</td><td>'+num(A.cust(r))+'</td><td class="l"><span class="badge '+tl[r[6]][1]+'">'+tl[r[6]][0]+'</span></td></tr>'}
+  $('#ex').innerHTML=h+'</tbody>';$('#exCount').textContent=rows.length+' of '+d.c.length+' shown';
+  $('#ex').querySelectorAll('th.sort').forEach(th=>th.onclick=()=>{const c=th.dataset.c;state.exSort=[c,state.exSort[0]===c?-state.exSort[1]:-1];renderExplorer()});
+}
+function lineOf(t,i){if(state.per==='wk')return t[4][i];const a=state.x.d[t[0]];const e=a&&a[i];return e&&e.length>1?e[2][0]:0}
+function renderTypes(){
+  const ix=state.index.types.slice(),W=state.per==='wk'?'week':'day';
+  $('#typesTitle').textContent='Income needed per '+W+', every company type';
+  const s10=t=>t[3][9]>=1&&lineOf(t,9)>0?lineOf(t,9):null;
+  if(state.sort==='name')ix.sort((a,b)=>a[1].localeCompare(b[1]));
+  else{const dir=state.sort==='s10'?-1:1;ix.sort((a,b)=>{const x=s10(a),y=s10(b);if(x==null&&y==null)return a[1].localeCompare(b[1]);if(x==null)return 1;if(y==null)return -1;return (x-y)*dir})}
+  const colMax=Array.from({length:10},(_,i)=>Math.max(...ix.map(t=>lineOf(t,i)||0)));
+  let h='<thead><tr><th class="l">Type</th><th>Rated</th>'+[1,2,3,4,5,6,7,8,9,10].map(s=>'<th>'+s+'★</th>').join('')+'</tr></thead><tbody>';
+  for(const t of ix){
+   h+='<tr'+(t[0]===state.cur.id?' class="sel"':'')+'><td class="l"><a href="#types" data-id="'+t[0]+'">'+esc(t[1])+'</a></td><td>'+num(t[2])+'</td>';
+   for(let i=0;i<10;i++){const n=t[3][i],v=lineOf(t,i);
+    if(!n){h+='<td class="h dim">–</td>';continue}
+    if(!v){h+='<td class="h dim" title="'+n+' companies, no lower-star sample to compare">n/a</td>';continue}
+    const p=Math.round(6+44*(v/(colMax[i]||1)));
+    const lowV=i>0&&t[3][i-1]>0&&v<lineOf(t,i-1);
+    h+='<td class="h'+(n<8||lowV?' thin':'')+'" style="background:color-mix(in srgb,var(--gold) '+p+'%,transparent)" title="'+n+' companies">'+money(v)+'</td>'}
+   h+='</tr>'}
+  $('#heat').innerHTML=h+'</tbody>';
+  $('#heat').querySelectorAll('a[data-id]').forEach(a=>a.onclick=e=>{e.preventDefault();pickType(+a.dataset.id,'ladder')});
+}
+/* ---- drivers ---- */
+const MET=['Weekly income','Daily income','Weekly customers','Daily customers','Company age','Staff seats filled','Income per customer','Daily pace vs weekly average'];
+function renderDrivers(){
+  const d=state.cur,r=state.x.rho[d.id]||[];
+  $('#drvTitle').textContent=d.name+': which measurable metrics move with the star rating';
+  if(!r.length){$('#rho').innerHTML='<p class="hint">No driver data for this type.</p>'}
+  else{
+   const items=MET.map((l,i)=>[l,r[i]]).filter(x=>x[1]!=null).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+   $('#rho').innerHTML=items.map(x=>{const v=x[1];return '<div class="rho-row"><span>'+x[0]+'</span><div class="rho-t"><div class="rho-f'+(v<0?' neg':'')+'" style="width:'+Math.min(100,Math.abs(v))+'%"></div></div><b>'+(v>0?'+':'')+(v/100).toFixed(2)+'</b></div>'}).join('');
+  }
+  let h='<thead><tr><th class="l">Star</th><th>Companies</th><th>Company age, days<br>25th / median / 75th</th><th>Seats filled<br>median</th><th>Open to<br>applicants</th><th>Income per<br>customer</th><th>Daily pace<br>vs week avg</th></tr></thead><tbody>';
+  for(const s of stars(d)){const p=pv(d,s,'wk'),e=xs(d,s);
+   if(!p){h+='<tr><td class="star">'+s+'★</td><td class="dim">0</td><td colspan="5" class="dim l">No companies at this star</td></tr>';continue}
+   if(!e){h+='<tr><td class="star">'+s+'★</td><td>'+p.n+'</td><td colspan="5" class="dim l">No extra data</td></tr>';continue}
+   h+='<tr><td class="star">'+s+'★</td><td>'+num(p.n)+'</td><td>'+e[5].map(num).join(' / ')+'</td><td>'+e[6]+'%</td><td>'+e[7]+'%</td><td>'+usd(e[8])+'</td><td>'+e[9]+'%</td></tr>'}
+  $('#drvTable').innerHTML=h+'</tbody>';
+}
+/* ---- my company ---- */
+const MY0={name:'My company',id:0,type:10,star:0,wi:0,wc:0,di:0,dc:0,age:0,hired:0,cap:0,pop:0,eff:0,env:0,trains:0,ad:0,crew:[],ts:Math.floor(Date.now()/1000)};
+let my=loadMy();
+function loadMy(){try{const j=JSON.parse(store('portal.my')||'null');if(j&&j.type)return Object.assign({},MY0,j)}catch(e){}return Object.assign({},MY0)}
+function saveMy(){store('portal.my',JSON.stringify(my))}
+const FIELDS=[['wi','Weekly income ($)'],['wc','Weekly customers'],['di','Daily income ($)'],['dc','Daily customers'],['age','Company age (days)'],['hired','Employees hired'],['cap','Employee capacity'],['pop','Popularity (%)'],['eff','Efficiency (%)'],['env','Environment (%)'],['trains','Trains available'],['ad','Advertising budget ($)']];
+function parseMine(txt){
+  const j=JSON.parse(txt),c=j.company||j,det=j.company_detailed||j.detailed||{},o={};
+  if(c.name!=null)o.name=String(c.name).slice(0,60);
+  [['id','ID'],['type','company_type'],['star','rating'],['wi','weekly_income'],['wc','weekly_customers'],['di','daily_income'],['dc','daily_customers'],['age','days_old'],['hired','employees_hired'],['cap','employees_capacity']].forEach(p=>{if(c[p[1]]!=null&&isFinite(+c[p[1]]))o[p[0]]=+c[p[1]]});
+  [['pop','popularity'],['eff','efficiency'],['env','environment'],['trains','trains_available'],['ad','advertising_budget']].forEach(p=>{if(det[p[1]]!=null&&isFinite(+det[p[1]]))o[p[0]]=+det[p[1]]});
+  if(c.employees&&typeof c.employees==='object'){const now=Date.now()/1000;
+   o.crew=Object.values(c.employees).filter(e=>e&&e.position!=='Director').map(e=>{const st=(e.status&&e.status.state)||'Okay';
+    return[+e.days_in_company||0,st==='Hospital'?'H':(st==='Traveling'||st==='Abroad')?'T':st==='Jail'?'J':'Ok',Math.max(0,Math.round((now-((e.last_action&&e.last_action.timestamp)||now))/3600))]})}
+  if(!('wi' in o))throw new Error('no company figures found');
+  o.ts=Math.floor(Date.now()/1000);return o;
+}
+function ladderLines(d,per){
+  const i=Array(12).fill(null),c=Array(12).fill(null);let mi=0,mc=0;
+  for(let s=1;s<=10;s++){const p=pv(d,s,per);if(!p||p.none)continue;mi=Math.max(mi,p.li);mc=Math.max(mc,p.lc);i[s]=mi;c[s]=mc}
+  return{i,c};
+}
+function lookStar(arr,v){let b=0;for(let s=1;s<=10;s++)if(arr[s]!=null&&v>=arr[s])b=s;return b}
+function pctOf(a,v){const P=[5,25,50,75,95];if(!a||!a.length)return '–';if(v<a[0])return 'below the 5th';if(v>a[4])return 'above the 95th';
+  for(let i=0;i<4;i++){if(v<=a[i+1]){const lo=a[i],hi=a[i+1],f=hi>lo?(v-lo)/(hi-lo):0;return 'about the '+ord(Math.round(P[i]+f*(P[i+1]-P[i])))}}return 'above the 95th'}
+const SEV=[['Secure','good'],['Thin margin','warn'],['Below line','bad'],['Below lower line','bad']];
+function grade(v,hold,low,comfort){if(hold==null)return -1;if(low!=null&&v<low)return 3;if(v<hold)return 2;if(comfort!=null&&v<comfort)return 1;return 0}
+function badge(g){return g<0?'<span class="badge">n/a</span>':'<span class="badge '+SEV[g][1]+'">'+SEV[g][0]+'</span>'}
+function nextSunday(){const n=new Date(),dow=n.getUTCDay(),add=((7-dow)%7)||7;return{add:add,left:Math.max(1,(7-dow)%7),label:new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+add)).toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',timeZone:'UTC'})}}
+let myDays=null;
+function buildForm(){
+  const types=state.index.types.slice().sort((a,b)=>a[1].localeCompare(b[1]));
+  $('#myForm').innerHTML=
+   '<label class="fld wide">Company name<input type="text" id="f_name" value="'+esc(my.name)+'"></label>'+
+   '<label class="fld">Company type<select id="f_type">'+types.map(t=>'<option value="'+t[0]+'"'+(t[0]===my.type?' selected':'')+'>'+esc(t[1])+'</option>').join('')+'</select></label>'+
+   '<label class="fld">Stars now<select id="f_star">'+[10,9,8,7,6,5,4,3,2,1,0].map(s=>'<option value="'+s+'"'+(s===my.star?' selected':'')+'>'+(s?s+' star':'Unrated')+'</option>').join('')+'</select></label>'+
+   FIELDS.map(f=>'<label class="fld">'+f[1]+'<input type="text" inputmode="numeric" data-k="'+f[0]+'" value="'+num(my[f[0]])+'"></label>').join('');
+  const upd=()=>{saveMy();renderMine();};
+  $('#f_name').onchange=e=>{my.name=e.target.value.slice(0,60);upd()};
+  $('#f_type').onchange=e=>{my.type=+e.target.value;upd()};
+  $('#f_star').onchange=e=>{my.star=+e.target.value;upd()};
+  document.querySelectorAll('#myForm input[data-k]').forEach(i=>i.onchange=()=>{const v=parseFloat(String(i.value).replace(/[, $]/g,''));if(isFinite(v)){my[i.dataset.k]=v;i.value=num(v);upd()}});
+}
+async function renderMine(){
+  const out=$('#mineOut');let d;
+  if(LOCAL&&state.keyOk===undefined){out.innerHTML='';return}
+  if(LOCAL&&!state.keyOk&&!state.demo){out.innerHTML='<div class="card verdict warn"><h2>Add your own Limited Access key first</h2><p>My company reads your company straight from Torn, so it needs your own Limited Access API key. Open the <a href="#data">Data tab</a>, paste the key and press Save and verify.</p></div>';return}
+  if(!my.wi&&!my.wc){out.innerHTML='<div class="card verdict warn"><h2>No company loaded yet</h2><p>'+(LOCAL?'Press Fetch my company above. Your key is saved on the Data tab.':'Paste an API response below or type your numbers into the form.')+'</p></div>';return}
+  try{d=await getType(my.type)}catch(e){out.innerHTML='<div class="msg err">Could not load that company type.</div>';return}
+  const s=Math.round(my.star)||0,wiK=my.wi/1000,diK=my.di/1000,sun=nextSunday(),D=my.di,Dc=my.dc;
+  if(myDays==null)myDays=sun.left;
+  const LW=ladderLines(d,'wk'),LD=ladderLines(d,'day'),cw=pv(d,s,'wk'),cd=pv(d,s,'day'),ex=xs(d,s);
+  const lookI=lookStar(LW.i,wiK),lookC=lookStar(LW.c,my.wc);
+  const gI=cw?grade(wiK,LW.i[s],s>1?LW.i[s-1]:null,cw.inc[1]):-1,gC=cw?grade(my.wc,LW.c[s],s>1?LW.c[s-1]:null,cw.cust[1]):-1;
+  const g=Math.max(gI,gC);
+  const upI=s<10&&LW.i[s+1]!=null&&wiK>=LW.i[s+1],upC=s<10&&LW.c[s+1]!=null&&my.wc>=LW.c[s+1];
+  let vcls,vhead,vbody;
+  if(!s||!cw){vcls='warn';vhead='Pick your current star rating';vbody='Choose your star rating below to get a read.'}
+  else if(g===3){vcls='bad';vhead='High risk of losing a star';vbody='Your weekly numbers sit below even the '+(s-1)+'★ earn line, so they match '+Math.max(lookI,lookC)+'★ '+d.name+' companies rather than '+s+'★ ones.'}
+  else if(g===2){vcls='bad';vhead='At risk: under the '+s+'★ earn line';vbody='You are below the line that separates '+s+'★ from '+(s-1)+'★ companies.'}
+  else if(g===1){vcls='warn';vhead='Holding, with a thin margin';vbody='Above the '+s+'★ earn line but under the comfort level (the 25th percentile of '+s+'★ companies).'}
+  else if(upI&&upC){vcls='good';vhead='Secure, and ready to rise';vbody='You clear the '+(s+1)+'★ earn line on both weekly income and customers.'}
+  else{vcls='good';vhead='Secure for now';vbody='You clear the '+s+'★ comfort level on weekly income and customers.'}
+  let h='<div class="card verdict '+vcls+'"><div class="vh"><span class="vs">'+(s?s+'★':'–')+'</span><div><div class="vn">'+esc(my.name)+' <span class="dim">· '+esc(d.name)+(my.id?' · '+link(my.id):'')+'</span></div><h2>'+esc(vhead)+'</h2></div></div><p>'+esc(vbody)+'</p>'+
+   '<p class="hint" style="margin-top:6px">Figures as of '+new Date(my.ts*1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'. Rating changes happen automatically each Sunday (Torn wiki), next: '+esc(sun.label)+'.</p></div>';
+  h+='<div class="kpis">'+
+   kpi('Rated',s?s+'★':'–',esc(d.name))+
+   kpi('Income reads like',lookI?lookI+'★':'below 1★','weekly '+usd(my.wi)+(lookI&&lookI!==s?' vs your '+s+'★':''))+
+   kpi('Customers read like',lookC?lookC+'★':'below 1★',num(my.wc)+' per week'+(lookC&&lookC!==s?' vs your '+s+'★':''))+
+   kpi('Peers below the lower line',cw&&s>1?(d.s[s].rk[1]+' of '+cw.n):'–',cw&&s>1?s+'★ companies under the '+(s-1)+'★ income line':'')+'</div>';
+  /* position table */
+  const row=(label,v,lines,arr,fmt,showGrade)=>{
+    const hold=lines[s],low=s>1?lines[s-1]:null,next=s<10?lines[s+1]:null,gr=showGrade?grade(v,hold,low,arr&&arr[1]):-2;
+    return '<tr><td class="l">'+label+'</td><td><b>'+fmt(v)+'</b></td><td>'+(low==null?'–':fmt(low))+'</td><td>'+(hold==null?'n/a':fmt(hold))+'</td><td>'+(arr?fmt(arr[1]):'–')+'</td><td>'+(next==null?'–':fmt(next))+'</td><td class="l">'+(arr?pctOf(arr,v):'–')+'</td><td class="l">'+(gr===-2?'':badge(gr))+'</td></tr>'};
+  h+='<div class="card"><h2>Where you sit among '+s+'★ '+esc(d.name)+' companies</h2><div class="tablewrap"><table><thead><tr><th class="l">Metric</th><th>You</th><th>'+(s>1?(s-1)+'★ line':'Lower line')+'</th><th>'+s+'★ line<br>(to hold)</th><th>Comfort<br>25th pct</th><th>'+(s<10?(s+1)+'★ line<br>(to rise)':'Next line')+'</th><th class="l">Your place among '+s+'★</th><th class="l">Status</th></tr></thead><tbody>'+
+   (cw?row('Weekly income',wiK,LW.i,cw.inc,money,true)+row('Weekly customers',my.wc,LW.c,cw.cust,num,true)+(cd&&!cd.none?row('Daily income',diK,LD.i,cd.inc,money,true)+row('Daily customers',my.dc,LD.c,cd.cust,num,true):''):'')+
+   '</tbody></table></div>';
+  if(ex&&cw){
+   const ageQ=my.age<d.s[s].ag[0]?'younger than any '+s+'★ company seen':my.age<ex[5][0]?'in the youngest quarter':my.age<ex[5][1]?'below the median':'at or above the median';
+   const fill=my.cap?Math.round(100*my.hired/my.cap):0,ipc=my.wc?my.wi/my.wc:0,ipcR=ex[8]?ipc/ex[8]:1;
+   h+='<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th class="l">Other measurable inputs</th><th>You</th><th>Typical at '+s+'★</th><th class="l">Read</th></tr></thead><tbody>'+
+    '<tr><td class="l">Company age</td><td><b>'+num(my.age)+' d</b></td><td>'+ex[5].map(num).join(' / ')+' d</td><td class="l">'+ageQ+' (youngest seen '+num(d.s[s].ag[0])+' d)</td></tr>'+
+    '<tr><td class="l">Seats filled</td><td><b>'+fill+'%</b></td><td>'+ex[6]+'% median</td><td class="l">'+(fill>=ex[6]?'<span class="badge good">Full or better</span>':'<span class="badge warn">Under-staffed</span>')+'</td></tr>'+
+    '<tr><td class="l">Income per customer</td><td><b>'+usd(ipc)+'</b></td><td>'+usd(ex[8])+' median</td><td class="l">'+(ipcR>=.9?'<span class="badge good">In line</span>':'<span class="badge warn">Lower than typical</span>')+'</td></tr>'+
+    '<tr><td class="l">Today vs weekly average</td><td><b>'+(my.wi?Math.round(100*my.di/(my.wi/7)):0)+'%</b></td><td>'+ex[9]+'% median</td><td class="l">'+((my.wi&&my.di/(my.wi/7)<.9)?'<span class="badge bad">Slowing</span>':'<span class="badge good">Steady</span>')+'</td></tr>'+
+    '</tbody></table></div>'}
+  h+='<p class="hint">Lines are cleaned so they never decrease with the star. Percentile place uses the 5th/25th/50th/75th/95th points of companies holding '+s+'★ today, so it is approximate.</p></div>';
+  /* what it takes */
+  if(cw){
+   const n=Math.max(0,Math.min(7,+myDays||0)),W=my.wi,Wc=my.wc;
+   const dr=dropSums(n),proj=n?W+n*D-dr.inc:W,projC=n?Wc+n*Dc-dr.cust:Wc;
+   const targets=[];if(s>1)targets.push([s-1,'Stay above the '+(s-1)+'★ line']);targets.push([s,'Hold '+s+'★']);if(s<10)targets.push([s+1,'Reach '+(s+1)+'★']);if(s<9)targets.push([10,'Reach 10★']);
+   const rows=[];
+   targets.forEach(t=>{[['Income',LW.i[t[0]],W,D,'inc',1000,usd,dr.inc],['Customers',LW.c[t[0]],Wc,Dc,'cust',1,x=>num(Math.round(x)),dr.cust]].forEach(m=>{
+     if(m[1]==null)return;const need=m[1]*m[5],gap=need-m[2],full=need/7,dist=pv(d,Math.max(s,t[0]),'day'),p95=dist?dist[m[4]][4]*m[5]:0,p50=dist?dist[m[4]][2]*m[5]:0;
+     const nd=n?(need-m[2]+m[7])/n:null;
+     let chk='<span class="badge">n/a</span>';
+     if(gap<=0)chk='<span class="badge good">Already above</span>';
+     else if(nd!=null){chk=nd<=m[3]?'<span class="badge good">On pace</span>':nd<=p50?'<span class="badge warn">Reachable</span>':nd<=p95?'<span class="badge warn">Stretch</span>':'<span class="badge bad">Beyond 95% of '+Math.max(s,t[0])+'★</span>'}
+     rows.push('<tr><td class="l">'+t[1]+'</td><td class="l">'+m[0]+'</td><td>'+m[6](need)+'</td><td>'+(gap<=0?'–':m[6](gap))+'</td><td>'+m[6](full)+'</td><td>'+(nd==null?'–':m[6](Math.max(0,nd)))+'</td><td>'+m[6](m[3])+'</td><td class="l">'+chk+'</td></tr>')})});
+   h+='<div class="card"><h2>What it takes</h2><div class="tools"><label class="pick" for="myDays">Daily reports before the update <select id="myDays">'+[0,1,2,3,4,5,6,7].map(k=>'<option value="'+k+'"'+(k===n?' selected':'')+'>'+k+'</option>').join('')+'</select></label></div>'+
+    '<div class="tablewrap"><table><thead><tr><th class="l">Target</th><th class="l">Metric</th><th>Weekly total<br>needed</th><th>Gap<br>today</th><th>Per day, if<br>held a full week</th><th>Per day, over the<br>next '+n+' report'+(n===1?'':'s')+'</th><th>Your day<br>now</th><th class="l">Reality check</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'+
+    '<p class="hint">Estimate: weekly totals are treated as a rolling seven-day sum updated by the daily report (about 18:00 TCT), and '+(dr.logged?'the '+n+' day'+(n===1?'':'s')+' about to drop out use <b>your own logged daily figures</b> (their sum matched your weekly total)':'each day that drops out is assumed to equal your weekly average (log a pull every day and the real days are used)')+'. If your daily income simply stays at '+usd(D)+', the weekly total drifts to about <b>'+usd(proj)+'</b> and weekly customers to about <b>'+num(Math.round(projC))+'</b> over '+n+' report'+(n===1?'':'s')+'. “Beyond 95%” means more than 95% of '+s+'★ companies reach in a single day.</p></div>';
+  }
+  h+=observed(d,s,wiK,my.wc);
+  /* actions */
+  const acts=[];
+  if(cw){
+   const hold=LW.i[s],holdC=LW.c[s];
+   if(hold!=null&&wiK<hold)acts.push(['Close the income gap','You are '+usd(my.wi)+' a week against a '+s+'★ earn line of '+usd(hold*1000)+', short by '+usd((hold-wiK)*1000)+' ('+Math.round(100*(hold-wiK)/hold)+'%). Held for a full week that means about '+usd(hold*1000/7)+' a day, against your '+usd(D)+'.']);
+   if(holdC!=null&&my.wc<holdC)acts.push(['Close the customer gap','You serve '+num(my.wc)+' customers a week against a '+s+'★ earn line of '+num(holdC)+' ('+num(holdC/7|0)+' a day, you are at '+num(Math.round(Dc))+').']);
+   if(ex){const ipc=my.wc?my.wi/my.wc:0;
+    if(ex[8]&&Math.abs(ipc/ex[8]-1)<=.12)acts.push(['The shortfall is volume, not price','You earn '+usd(ipc)+' per customer; the typical '+s+'★ company earns '+usd(ex[8])+'. Revenue per customer is in line, so the gap is the number of customers.']);
+    else if(ex[8]&&ipc<ex[8])acts.push(['Revenue per customer is low','You earn '+usd(ipc)+' per customer against a typical '+usd(ex[8])+' at '+s+'★.'])}
+   acts.push(['Advertising is the customer lever','The Torn wiki says directors set a daily advertising budget to attract customers: a base effect of up to 40%, shrinking when more rivals of the same type advertise, boosted by a Marketer employee, the BUS2400 and LAW2100 courses and the TGP stock benefit. '+(my.ad>0?'Your budget is '+usd(my.ad)+'. Review whether it is a daily amount and whether it is paying back.':'You have no budget set.')]);
+   if(my.pop>0)acts.push(['Popularity is a result, not a lever','The wiki defines popularity as your weekly income as a percentage of the highest weekly income in your company type, with no direct influence on income. Yours is '+my.pop+'%, which implies the top '+esc(d.name)+' company earns about '+usd(my.wi/(my.pop/100))+' a week.']);
+   const crew=my.crew||[],nNew=crew.filter(c=>c[0]<=7).length,nOut=crew.filter(c=>c[1]!=='Ok').length,nIdle=crew.filter(c=>c[2]>=24).length,tn=crew.map(c=>c[0]).sort((a,b)=>a-b),med=tn.length?(tn[(tn.length-1)>>1]+tn[tn.length>>1])/2:0;
+   if(crew.length&&(nNew||nOut||nIdle))acts.push(['Stabilise the team',[nNew?nNew+' of '+crew.length+' staff joined in the last week':null,nOut?nOut+' are in hospital, jail or travelling right now':null,nIdle?nIdle+' have been offline for a day or more':null].filter(Boolean).join('; ')+'. Median tenure is '+Math.round(med)+' days. The wiki says drug users and inactive employees lower environment, and a low environment can cut income by up to a third. Yours reads '+my.env+'% and efficiency '+my.eff+'% today, so watch both daily.']);
+   if(my.hired<my.cap)acts.push(['Fill the empty seats',(my.cap-my.hired)+' of '+my.cap+' seats are open.']);
+   if(my.eff<100)acts.push(['Raise efficiency','Efficiency is the average effectiveness of your employees and updates once a day. Yours is '+my.eff+'%.']);
+   if(my.trains>0)acts.push(['Spend the trains','You have '+my.trains+' trains available. Trains raise employee working stats, which feed efficiency.']);
+   acts.push(['Timing','The rating is re-evaluated automatically every Sunday, and employee pay does not affect it (Torn wiki). Torn also caps the highest star a company can hold by its lifetime gross revenue, which is not public and is not modelled here.']);
+   h+='<div class="card"><h2>'+('What to do to keep '+s+'★'+(s<10?' and reach 10★':''))+'</h2><ol class="acts">'+acts.map(a=>'<li><b>'+esc(a[0])+'.</b> '+a[1]+'</li>').join('')+'</ol>'+
+    '<p class="hint">Only the first two or three notes rest on the sampled data. The rest come from the Torn wiki and your own figures, and no one outside Torn knows the exact formula.</p></div>';
+  }
+  out.innerHTML=h;
+  const sel=$('#myDays');if(sel)sel.onchange=e=>{myDays=+e.target.value;renderMine()};
+}
+function applyIndex(){
+  const idx=state.index,cur=state.cur?state.cur.id:null;
+  $('#typeSel').innerHTML=idx.types.slice().sort((a,b)=>a[1].localeCompare(b[1])).map(t=>'<option value="'+t[0]+'">'+esc(t[1])+' ('+t[2]+')</option>').join('');
+  if(cur)$('#typeSel').value=String(cur);
+  $('#snap').textContent='Snapshot '+new Date(idx.ts*1000).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  $('#foot').textContent=idx.types.length+' company types · '+num(idx.types.reduce((a,t)=>a+t[2],0))+' rated companies';
+}
+function renderAll(){renderLadder();renderRanges();renderWatch();renderExplorer();renderTypes();renderDrivers()}
+/* ---- data ---- */
+async function getType(id){
+  if(cache[id])return cache[id];
+  const r=await fetch('data/'+id+'.json');if(!r.ok)throw new Error('HTTP '+r.status);
+  const a=await r.json(),s={};
+  const ex=p=>[0,p[0],0,p[1],p[2],p[3],0,p[4],0];
+  a[5].forEach((x,i)=>{s[i]=x.length>1?{n:x[0],wi:ex(x[1]),wc:ex(x[2]),ag:[x[3],0,0],cw:x[4],cc:x[5],rk:x[6]}:{n:x[0]}});
+  const d={id:a[0],name:a[1],ts:a[2],total:a[3],rated:a[4],s:s,c:a[6]};
+  const xc=state.x.c[id]||[];d.c.forEach((r,i)=>{const e=xc[i];r.dI=e?e[1]:0;r.dC=e?e[2]:0});
+  return cache[id]=d;
+}
+async function pickType(id,view){
+  store('portal.type',String(id));
+  try{status('Loading '+(state.index.types.find(t=>t[0]===id)||[0,'type'])[1]+'…');
+   state.cur=await getType(id);status('');
+   $('#typeSel').value=String(id);
+   const fs=$('#fStar');fs.innerHTML='<option value="">All</option>'+stars(state.cur).map(s=>'<option value="'+s+'">'+s+' star</option>').join('');
+   renderAll();if(LOCAL)renderHistory();
+  }catch(e){console.error(e&&e.stack);status('Could not load that company type ('+e.message+').',true)}
+  if(view)location.hash=view;else show();
+}
+function show(){
+  let v=(location.hash||'#ladder').slice(1);if(!VIEWS.some(x=>x[0]===v))v='ladder';
+  VIEWS.forEach(x=>{const el=$('#v-'+x[0]);if(el)el.hidden=x[0]!==v});
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+}
+async function init(){
+  $('#tabs').innerHTML=VIEWS.map(v=>'<a href="#'+v[0]+'" data-v="'+v[0]+'"'+(v[0]==='data'?' hidden':'')+'>'+v[1]+'</a>').join('');
+  window.addEventListener('hashchange',show);show();
+  const p=store('portal.per');if(p==='wk'||p==='day')state.per=p;
+  document.querySelectorAll('#perSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.p===state.per);b.onclick=()=>{state.per=b.dataset.p;store('portal.per',state.per);document.querySelectorAll('#perSeg button').forEach(x=>x.classList.toggle('on',x===b));if(state.cur)renderAll()}});
+  try{
+   const [ix,xx]=await Promise.all([fetch('data/index.json').then(r=>r.json()),fetch('data/x.json').then(r=>r.ok?r.json():null).catch(()=>null)]);
+   state.index=ix;if(xx)state.x=xx;else status('Daily figures could not be loaded; weekly figures still work.',true);
+  }catch(e){status('Could not load the data files ('+e.message+').',true);return}
+  const idx=state.index;applyIndex();
+  $('#typeSel').onchange=e=>pickType(+e.target.value);
+  document.querySelectorAll('#metricSeg button').forEach(b=>b.onclick=()=>{state.metric=b.dataset.m;renderRanges()});
+  document.querySelectorAll('#sortSeg button').forEach(b=>b.onclick=()=>{state.sort=b.dataset.s;document.querySelectorAll('#sortSeg button').forEach(x=>x.classList.toggle('on',x===b));renderTypes()});
+  ['fStar','fTag'].forEach(i=>$('#'+i).onchange=renderExplorer);$('#fId').oninput=renderExplorer;
+  buildForm();
+  $('#myParse').onclick=()=>{const m=$('#myMsg');try{const o=parseMine($('#myPaste').value);Object.assign(my,o);saveMy();$('#myPaste').value='';buildForm();renderMine();m.className='hint';m.textContent='Loaded '+(o.name||'your company')+' ('+Object.keys(o).length+' fields). Nothing left this page.'}catch(e){m.className='msg err';m.textContent='Could not read that: '+e.message}};
+  $('#myReset').onclick=()=>{my=Object.assign({},MY0);try{localStorage.removeItem('portal.my')}catch(e){}buildForm();renderMine()};
+  let start=parseInt(store('portal.type'),10);if(!idx.types.some(t=>t[0]===start))start=10;
+  await pickType(start);
+  renderMine();
+}
+/* ---- local app (server-backed) ---- */
+const _tm=document.querySelector('meta[name="portal-token"]');
+const TOKEN=_tm?_tm.content:'';
+const LOCAL=!!TOKEN&&TOKEN.indexOf('__TOK')!==0;
+async function api(path,body){
+  const r=await fetch(path,{method:body===undefined?'GET':'POST',headers:{'X-Token':TOKEN,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;
+}
+const when=ts=>new Date(ts*1000).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+const qv=(a,p)=>{if(!a.length)return 0;a=a.slice().sort((x,y)=>x-y);const i=(a.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return a[lo]+(a[hi]-a[lo])*(i-lo)};
+function liveNote(t,err){const m=$('#liveMsg');m.className=err?'msg err':'hint';m.textContent=t}
+function renderHist(h){
+  if(h)state.mineHist=h;h=state.mineHist;
+  const card=$('#histCard');if(!h||!h.length){card.hidden=true;return}
+  card.hidden=false;const rows=h.slice(-30).reverse();
+  let o='<thead><tr><th class="l">When</th><th>Stars</th><th>Weekly income</th><th>Weekly customers</th><th>Daily income</th><th>Daily customers</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{const prev=rows[i+1];const ch=prev&&prev.star!=null&&r.star!==prev.star;
+   o+='<tr><td class="l">'+when(r.ts)+'</td><td class="star" style="text-align:right">'+(r.star==null?'–':r.star+'★')+(ch?' <span class="badge '+(r.star<prev.star?'bad':'good')+'">was '+prev.star+'★</span>':'')+'</td><td>'+usd(r.wi)+'</td><td>'+num(r.wc)+'</td><td>'+usd(r.di)+'</td><td>'+num(r.dc)+'</td></tr>'});
+  $('#histTable').innerHTML=o+'</tbody>';
+}
+let firstLive=true;
+async function fetchMine(){
+  const b=$('#liveFetch');b.disabled=true;liveNote('Asking Torn…');
+  try{const j=await api('api/mine',{});
+   const o=parseMine(JSON.stringify(j.data));Object.assign(my,o);saveMy();buildForm();state.mineHist=j.history||state.mineHist;
+   liveNote(j.cached?'Showing the last pull ('+j.age+' s old). Torn caches answers for 30 seconds.':'Pulled from Torn just now.');
+   if(firstLive&&state.index&&state.index.types.some(t=>t[0]===my.type)){firstLive=false;await pickType(my.type)}
+   renderMine();renderHist(j.history);
+  }catch(e){liveNote(e.message,true)}finally{b.disabled=false}
+}
+/* key + refresh + history (Data tab) */
+let rfTimer=null,rfSeen=0;
+function keyText(st){
+  if(st.demo)return['Demo mode: no key is needed and nothing is sent to Torn.',false];
+  if(st.key_ok&&st.info)return['Verified: '+st.info.type+' key for player '+st.info.user_id+(st.info.company_id?', company '+st.info.company_id:', no company')+'. The key stays on this PC.',false];
+  if(st.has_key)return[(st.key_error||'The saved key could not be verified.')+' Enter a new key below.',true];
+  return['No key yet. Paste your own Limited Access key below.',false];
+}
+function applyState(st){
+  state.keyOk=!!st.key_ok;state.demo=!!st.demo;
+  const k=keyText(st),m=$('#keyMsg');m.className=k[1]?'msg err':'hint';m.textContent=k[0];
+  $('#liveKey').placeholder=st.has_key?(st.key_from_env?'key from TORN_API_KEY':'a key is saved (hidden)'):'paste your own key';
+  $('#liveClear').hidden=!st.has_key||st.key_from_env;
+  $('#liveFetch').disabled=!state.keyOk;$('#rfStart').disabled=!state.keyOk||st.refresh.running||st.demo;
+  $('#keyGate').hidden=state.keyOk;
+  renderRefresh(st);
+}
+function estCalls(scope){
+  if(!state.index)return 0;
+  const ts=scope==='type'?state.index.types.filter(t=>t[0]===state.cur.id):state.index.types;
+  return ts.reduce((a,t)=>a+Math.ceil((t[2]||300)/100)+1,0)+1;
+}
+function renderRefresh(st){
+  const p=st.refresh||{},run=!!p.running;
+  $('#rfCancel').hidden=!run;$('#rfMeter').hidden=!(run||p.done);
+  const pct=run?Math.min(99,Math.round(100*(p.calls||0)/Math.max(1,p.est_calls||1))):(p.done&&!p.error&&!p.cancelled?100:Math.round(100*(p.calls||0)/Math.max(1,p.est_calls||1)));
+  $('#rfBar').style.width=pct+'%';
+  let t='';
+  if(run)t='Collecting '+p.type_name+' ('+p.types_done+' of '+p.types_total+' types done) · '+num(p.calls)+' requests · '+num(p.rows)+' companies read';
+  else if(p.done&&p.error)t='Stopped: '+p.error+(p.types_done?' ('+p.types_done+' type'+(p.types_done===1?'':'s')+' were saved before that.)':'');
+  else if(p.done&&p.cancelled)t='Cancelled. '+(p.types_done||0)+' type'+(p.types_done===1?'':'s')+' were saved.';
+  else if(p.done)t='Finished: '+p.types_done+' type'+(p.types_done===1?'':'s')+' refreshed from '+num(p.rows)+' companies in '+num(p.calls)+' requests.';
+  else{const e=estCalls($('#rfScope').value);t='About '+num(e)+' requests, roughly '+Math.max(1,Math.round(e/55))+' minute'+(Math.round(e/55)<=1?'':'s')+'.'}
+  const m=$('#rfMsg');m.className=p.error?'msg err':'hint';m.textContent=t;
+  $('#rfLog').innerHTML=(p.log||[]).map(x=>'<li>'+esc(x)+'</li>').join('');
+  $('#rfStart').disabled=!state.keyOk||run||!!st.demo;
+  if(run){clearTimeout(rfTimer);rfTimer=setTimeout(pollRefresh,1000)}
+  else if(p.done&&p.started&&p.started!==rfSeen){rfSeen=p.started;onRefreshDone()}
+}
+async function pollRefresh(){try{renderRefresh(await api('api/state'))}catch(e){clearTimeout(rfTimer);rfTimer=setTimeout(pollRefresh,3000)}}
+async function reloadData(){
+  cache={};
+  const [ix,xx]=await Promise.all([fetch('data/index.json').then(r=>r.json()),fetch('data/x.json').then(r=>r.ok?r.json():null).catch(()=>null)]);
+  state.index=ix;if(xx)state.x=xx;applyIndex();
+  await pickType(state.cur?state.cur.id:10);
+}
+async function onRefreshDone(){try{await reloadData();await renderHistory();renderMine()}catch(e){status('Refreshed, but the page could not reload the new numbers ('+e.message+'). Reload the page.',true)}}
+async function renderHistory(){
+  if(!LOCAL||!state.cur)return;
+  let hx;try{hx=await api('api/history?type='+state.cur.id)}catch(e){return}
+  state.hx=hx;
+  if(my.type===state.cur.id)state.hxMine=hx;else{try{state.hxMine=await api('api/history?type='+my.type)}catch(e){}}
+  const runs=hx.runs.slice().reverse();
+  $('#runsTable').innerHTML=runs.length?'<thead><tr><th class="l">When</th><th>Scope</th><th>Types</th><th>Companies</th><th>Requests</th><th>Minutes</th><th class="l">Result</th></tr></thead><tbody>'+runs.map(r=>'<tr><td class="l">'+when(r.ts)+'</td><td>'+(r.scope==='all'?'All types':'One type')+'</td><td>'+r.types.length+'</td><td>'+num(r.rows)+'</td><td>'+num(r.calls)+'</td><td>'+Math.max(1,Math.round(r.seconds/60))+'</td><td class="l"><span class="badge '+(r.complete?'good':'warn')+'">'+(r.complete?'Complete':'Partial')+'</span></td></tr>').join('')+'</tbody>':'<tbody><tr><td class="l dim">No refreshes yet. The numbers shown are the bundled snapshot.</td></tr></tbody>';
+  $('#hxTitle').textContent=state.cur.name+': how the lines moved between your refreshes';
+  const byRun={};hx.lines.forEach(l=>{(byRun[l.run]=byRun[l.run]||{ts:l.ts,s:{}}).s[l.star]=l});
+  const rk=Object.keys(byRun).sort().reverse().slice(0,8);
+  $('#trendTable').innerHTML=rk.length?'<thead><tr><th class="l">Snapshot</th>'+[1,2,3,4,5,6,7,8,9,10].map(s=>'<th>'+s+'★</th>').join('')+'</tr></thead><tbody>'+rk.map(k=>'<tr><td class="l">'+when(byRun[k].ts)+'</td>'+[1,2,3,4,5,6,7,8,9,10].map(s=>{const l=byRun[k].s[s];return '<td class="h'+(l&&l.n<8?' thin':'')+'">'+(l&&l.wl?money(l.wl):'–')+'</td>'}).join('')+'</tr>').join('')+'</tbody>':'<tbody><tr><td class="l dim">Nothing logged for this type yet.</td></tr></tbody>';
+  const mv=hx.moves||{},rows=[];
+  for(let s=10;s>=1;s--){const m=mv[String(s)];if(!m)continue;const dn=m.down.map(r=>r[0]),up=m.up.map(r=>r[0]);
+   rows.push('<tr><td class="star">'+s+'★</td><td>'+num(m.stay)+'</td><td>'+dn.length+'</td><td>'+up.length+'</td><td>'+(dn.length?money(qv(dn,.5))+' / '+money(Math.max(...dn)):'–')+'</td><td>'+(up.length?money(Math.min(...up))+' / '+money(qv(up,.5)):'–')+'</td><td>'+(m.stayq&&m.stayq.length?money(m.stayq[1]):'–')+'</td></tr>')}
+  $('#moveTable').innerHTML=rows.length?'<thead><tr><th class="l">Star</th><th>Stayed</th><th>Fell</th><th>Rose</th><th>Fallers: weekly income<br>median / highest</th><th>Risers: weekly income<br>lowest / median</th><th>Stayers: weakest<br>10% under</th></tr></thead><tbody>'+rows.join('')+'</tbody>':'<tbody><tr><td class="l dim">No promotions or demotions recorded yet. Refresh this type before and after a Sunday rating update.</td></tr></tbody>';
+}
+/* how much of the week drops out before the update: your own logged days when available, otherwise the weekly average */
+function dropSums(n){
+  const W=my.wi,Wc=my.wc,out={inc:n*W/7,cust:n*Wc/7,logged:false,days:0};
+  const h=state.mineHist||[];if(!n||h.length<7)return out;
+  const key=ts=>Math.floor((ts-64800)/86400),days={};
+  h.forEach(r=>{if(r.id===my.id||!my.id)days[key(r.ts)]=r});
+  const ks=Object.keys(days).map(Number).sort((a,b)=>a-b);if(!ks.length)return out;
+  const top=ks[ks.length-1];let sI=0,sC=0,have=0;
+  for(let k=top-6;k<=top;k++){if(days[k]&&days[k].di!=null){sI+=days[k].di;sC+=days[k].dc||0;have++}}
+  if(have<7||Math.abs(sI-W)>.15*W)return out;
+  let dI=0,dC=0;for(let k=top-6;k<top-6+n;k++){dI+=days[k].di;dC+=days[k].dc||0}
+  return{inc:dI,cust:dC,logged:true,days:n};
+}
+function observed(d,s,wiK,wc){
+  if(!LOCAL)return '';
+  const hx=state.hxMine,m=hx&&hx.moves&&hx.moves[String(s)],runs=hx?hx.runs.filter(r=>r.types.includes(my.type)).length:0;
+  let h='<div class="card"><h2>What your own logs show</h2>';
+  if(!m||(!m.down.length&&!m.up.length)){return h+'<p class="hint" style="margin-top:0">'+(runs<2?'Only '+runs+' snapshot'+(runs===1?'':'s')+' of '+esc(d.name)+' so far. Refresh the data before and after a Sunday rating update (Data tab) and the real promotions and demotions will show up here.':'No star changes logged for '+s+'★ between your snapshots yet.')+'</p></div>'}
+  const dn=m.down,up=m.up,dI=dn.map(r=>r[0]),dC=dn.map(r=>r[1]);let t='';
+  if(dn.length){const above=dI.filter(v=>v>wiK).length;
+   t+='<li><b>'+dn.length+' '+s+'★ compan'+(dn.length===1?'y':'ies')+' fell a star.</b> At the earlier snapshot their weekly income was '+money(qv(dI,.5))+' at the median and '+money(Math.max(...dI))+' at most; their customers '+num(Math.round(qv(dC,.5)))+' at the median. '+above+' of them earned more than you do now ('+money(wiK)+').</li>'}
+  if(m.stay)t+='<li><b>'+num(m.stay)+' stayed at '+s+'★.</b> '+(m.stayq&&m.stayq.length?'The weakest 10% of the latest stayers earned under '+money(m.stayq[1])+' a week.':'')+'</li>';
+  if(up.length)t+='<li><b>'+up.length+' rose above '+s+'★.</b> The lowest of them earned '+money(Math.min(...up.map(r=>r[0])))+' a week at the earlier snapshot.</li>';
+  const warn=dn.length>=3&&wiK<=qv(dI,.75);
+  return h+(warn?'<p class="msg" style="margin-top:0">Your weekly income sits inside the range where '+s+'★ companies actually fell.</p>':'')+'<ul class="plain">'+t+'</ul><p class="hint">Counted across '+runs+' snapshots of '+esc(d.name)+'. The more Sundays you log, the sharper this gets.</p></div>';
+}
+async function initLocal(){
+  const nb=document.querySelector('#tabs a[data-v="data"]');if(nb)nb.hidden=false;
+  $('#liveCard').hidden=false;
+  let st={};try{st=await api('api/state')}catch(e){status(e.message,true);return}
+  if(st.demo){$('#snap').textContent+=' · demo company'}
+  $('#rfScope').onchange=()=>renderRefresh({refresh:{},demo:st.demo});
+  $('#liveSave').onclick=async()=>{const b=$('#liveSave');b.disabled=true;$('#keyMsg').className='hint';$('#keyMsg').textContent='Checking the key with Torn…';
+   try{const s=await api('api/key',{api_key:$('#liveKey').value});$('#liveKey').value='';applyState(s);if(s.key_ok)fetchMine()}catch(e){$('#keyMsg').className='msg err';$('#keyMsg').textContent=e.message}finally{b.disabled=false}};
+  $('#liveClear').onclick=async()=>{try{applyState(await api('api/key',{api_key:''}))}catch(e){$('#keyMsg').className='msg err';$('#keyMsg').textContent=e.message}};
+  $('#liveFetch').onclick=fetchMine;
+  $('#rfStart').onclick=async()=>{try{const s=await api('api/refresh',{scope:$('#rfScope').value,type:state.cur.id});applyState(s)}catch(e){const m=$('#rfMsg');m.className='msg err';m.textContent=e.message}};
+  $('#rfCancel').onclick=async()=>{try{await api('api/refresh/cancel',{})}catch(e){}};
+  try{const h=await api('api/history');state.mineHist=h.history;renderHist(h.history)}catch(e){}
+  applyState(st);rfSeen=(st.refresh&&st.refresh.started)||0;
+  await renderHistory();
+  if((st.has_key&&st.key_ok)||st.demo)fetchMine();
+  renderMine();
+}
+init().then(()=>{if(LOCAL)initLocal()});
+})();
+</script>
