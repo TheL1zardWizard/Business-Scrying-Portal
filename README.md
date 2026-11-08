@@ -85,4 +85,5 @@ This is an unofficial fan tool, not affiliated with Torn.
   Tell me which launcher you used, what you clicked, and the exact message shown (never post your API key).
 - **In Torn:** send a message in-game to **TheL1zardWizard [3661266]** (https://www.torn.com/profiles.php?XID=3661266) with any
   questions about the Business Scrying Portal or anything else.
+- **New to Torn?** You can join through my referral link: https://www.torn.com/3661266
 - **Torn questions** (rules, API keys) are best asked in Torn itself or at the official Torn API page: https://www.torn.com/api.html
