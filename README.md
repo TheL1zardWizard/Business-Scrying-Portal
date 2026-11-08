@@ -5,7 +5,7 @@ against that sample: where it sits now, what it takes to keep its star, and what
 **It advises; you run the company.**
 
 Like it? Come say hello: follow theL1zardWizard on Twitch (https://www.twitch.tv/thel1zardwizard_ttv) or join the Discord
-(https://discord.gg/thel1zardwizard). Technical questions are welcome in the Discord too (see "Questions and support" at the bottom).
+(https://discord.gg/thel1zardwizard). You can also reach me in-game as TheL1zardWizard [3661266]. Technical questions are welcome too (see "Questions and support" at the bottom).
 
 ## Start it
 
@@ -83,4 +83,6 @@ This is an unofficial fan tool, not affiliated with Torn.
   and say hello in the Discord: https://discord.gg/thel1zardwizard
 - **Technical questions, bugs or ideas?** Ask in the Discord: https://discord.gg/thel1zardwizard
   Tell me which launcher you used, what you clicked, and the exact message shown (never post your API key).
+- **In Torn:** send a message in-game to **TheL1zardWizard [3661266]** (https://www.torn.com/profiles.php?XID=3661266) with any
+  questions about the Business Scrying Portal or anything else.
 - **Torn questions** (rules, API keys) are best asked in Torn itself or at the official Torn API page: https://www.torn.com/api.html
