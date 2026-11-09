@@ -25,7 +25,10 @@ purpose, so the app can never do more than read. The key must belong to the play
   your income and customers actually look like, what you need per day to hold or climb, and a plain list of what to do.
 - **Employee calculator**: pick a position (the list follows the company type selected at the top, so an Adult Novelties
   filter only offers Adult Novelties positions), type the employee's three working stats, and get an estimated effectiveness
-  number with a full breakdown, what doubling the stats is worth, and the best-fitting position for those stats.
+  number shown the way the company Employees tab shows it (stars, the number, Stats M/I/E, days, position), with a full
+  breakdown, what doubling the stats is worth, and the best-fitting position for those stats. Merits, management and
+  addiction are not visible from stats alone, so you can also type the number the game shows and the calculator fills in
+  those hidden bonuses.
 - **Weekly / Daily** switch in the header, applied to the ladder, ranges, watchlist, explorer and all-types views.
 - **Company type** selector across all 39 types, **Drivers** (which measurable metrics track stars), **All types** heat table.
 - **Refresh on demand** (Data tab): re-collects every rated company of the selected type, or of all 39 types, from Torn's
@@ -63,7 +66,7 @@ never opens more than one refresh at a time, and never scrapes torn.com pages.
   Until then, demotion lines are inferred from where current holders sit.
 - Torn bases stars on gross profit and re-rates companies every Sunday. It also caps the top star by lifetime gross
   revenue, which is not public and not modelled here. No one outside Torn knows the exact formula.
-- The Employee calculator is an estimate. The working-stats part uses the formula on Torn's wiki (Working Stats). The
+- The Employee calculator is an estimate. The star count (one star per 20 points, up to five) is a guess; every employee in the sample I checked was above 100 and showed five. The working-stats part uses the formula on Torn's wiki (Working Stats). The
   "settled in" part follows the pattern seen on real employee cards (days in company minus 1, up to 10) and is not published
   by Torn. Merits, management, addiction, director education and inactivity are typed in by hand from the employee's
   effectiveness breakdown, and director education and inactivity are not modelled. Position requirements were bundled on
