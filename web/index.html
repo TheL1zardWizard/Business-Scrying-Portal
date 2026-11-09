@@ -114,6 +114,9 @@ textarea{width:100%;font:12.5px/1.4 var(--mono);color:var(--ink);background:var(
 .formgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:10px 14px}
 .fld{display:grid;gap:4px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);min-width:0}
 .fld.wide{grid-column:span 2}
+.stars{letter-spacing:2px;font-size:15px;white-space:nowrap}.stars i{font-style:normal;color:var(--line)}.stars i.on{color:var(--gold)}
+.effn{color:var(--good);font-weight:700;font-size:17px;margin-left:8px}
+table.emp td{padding:12px 10px}table.emp td.l,table.emp th.l{text-align:left}
 #calcForm .fld span{text-transform:none;letter-spacing:0;font-size:11px}
 td.l,th.l{text-align:left}
 .fld input,.fld select{font-size:14px;letter-spacing:0;text-transform:none;width:100%;min-width:0}
@@ -608,6 +611,10 @@ function calcVals(){
   const o={m:parseStat($('#c_m').value),i:parseStat($('#c_i').value),e:parseStat($('#c_e').value)};
   return o;
 }
+function fmtStat(v){v=Math.round(v||0);if(v<1000)return String(v);
+  const u=v>=1e6?[1e6,'m']:[1e3,'k'];const x=v/u[0];return (x<10?Math.round(x*10)/10:Math.round(x))+u[1]}
+function effStars(total){const n=Math.max(0,Math.min(5,Math.floor(total/20)));let s='';for(let i=0;i<5;i++)s+='<i class="'+(i<n?'on':'')+'">\u2605</i>';return '<span class="stars" aria-label="'+n+' of 5 stars">'+s+'</span>'}
+function effCell(total){return effStars(total)+'<b class="effn">'+total+'</b>'}
 async function renderCalc(){
   const form=$('#calcForm');if(!form||!state.cur)return;
   if(!state.pos){try{const r=await fetch('data/pos.json');if(!r.ok)throw new Error('HTTP '+r.status);state.pos=await r.json()}catch(e){form.innerHTML='';$('#calcRes').innerHTML='<p class="msg err">The position list could not be loaded ('+esc(e.message)+').</p>';return}}
@@ -622,7 +629,8 @@ async function renderCalc(){
    '<label class="fld">Merit bonus (points)<input type="text" inputmode="numeric" id="c_merit" autocomplete="off" value="'+esc(ex.merit||'')+'" placeholder="0"></label>'+
    '<label class="fld">Management bonus (points)<input type="text" inputmode="numeric" id="c_mgmt" autocomplete="off" value="'+esc(ex.mgmt||'')+'" placeholder="0"></label>'+
    '<label class="fld">Addiction penalty<input type="text" inputmode="numeric" id="c_add" autocomplete="off" value="'+esc(ex.add||'')+'" placeholder="0"></label>'+
-   '<label class="fld">Other + or − points<input type="text" inputmode="numeric" id="c_other" autocomplete="off" value="'+esc(ex.other||'')+'" placeholder="0"></label>';
+   '<label class="fld">Other + or − points<input type="text" inputmode="numeric" id="c_other" autocomplete="off" value="'+esc(ex.other||'')+'" placeholder="0"></label>'+
+   '<label class="fld wide">Effectiveness shown in the game (optional, fills in the hidden bonuses)<input type="text" inputmode="numeric" id="c_game" autocomplete="off" value="'+esc(ex.game||'')+'" placeholder="e.g. 126"></label>';
   form.querySelectorAll('input,select').forEach(el=>{el.oninput=el.onchange=calcUpdate});
   calcUpdate();
 }
@@ -631,12 +639,12 @@ function calcUpdate(){
   const name=$('#c_pos').value,p=t.p[name];if(!p)return;
   CALC.pos[state.cur.id]=name;
   const raw={m:$('#c_m').value,i:$('#c_i').value,e:$('#c_e').value};
-  const ex={days:$('#c_days').value,merit:$('#c_merit').value,mgmt:$('#c_mgmt').value,add:$('#c_add').value,other:$('#c_other').value};
+  const ex={days:$('#c_days').value,merit:$('#c_merit').value,mgmt:$('#c_mgmt').value,add:$('#c_add').value,other:$('#c_other').value,game:$('#c_game').value};
   CALC.st=raw;CALC.ex=ex;saveCalc();
   const vals=calcVals(),ps=posStats(p),used=ps.map(q=>q.k);
   WSTATS.forEach(w=>{const q=ps.find(x=>x.k===w[0]);$('#w_'+w[0]).style.opacity=q?1:.45;$('#r_'+w[0]).textContent=q?'(needs '+num(q.req)+')':'(not used here)'});
   const bad=[];WSTATS.forEach(w=>{if(used.includes(w[0])&&isNaN(vals[w[0]]))bad.push(w[1])});
-  const nums={days:parseInt0(ex.days),merit:parseInt0(ex.merit),mgmt:parseInt0(ex.mgmt),add:parseInt0(ex.add),other:parseInt0(ex.other)};
+  const nums={days:parseInt0(ex.days),merit:parseInt0(ex.merit),mgmt:parseInt0(ex.mgmt),add:parseInt0(ex.add),other:parseInt0(ex.other),game:parseInt0(ex.game)};
   Object.keys(nums).forEach(k=>{if(isNaN(nums[k]))bad.push(k)});
   const msg=$('#calcMsg');
   if(bad.length){msg.className='msg err';msg.textContent='Check the numbers entered for: '+bad.join(', ')+'. Use digits only, or a k, m or b suffix for the working stats (12k, 1.5m).';return}
@@ -644,19 +652,24 @@ function calcUpdate(){
   const rows=ps.map(q=>{const s=vals[q.k]||0;return{q:q,s:s,pts:statEff(s,q.req)}});
   const ws=rows.reduce((a,r)=>a+r.pts,0);
   const settled=Math.max(0,Math.min(10,nums.days-1));
-  const total=ws+settled+nums.merit+nums.mgmt-Math.abs(nums.add)+nums.other;
+  const hasGame=nums.game>0;
+  const bonus=hasGame?nums.game-ws-settled:nums.merit+nums.mgmt-Math.abs(nums.add)+nums.other;
+  const total=ws+settled+bonus;
+  const daysTxt=ex.days.trim()===''?'\u2013':String(nums.days);
+  const stTxt=['m','i','e'].map(k=>fmtStat(vals[k]||0)).join(' / ');
   const meets=rows.every(r=>r.s>=r.q.req),any=rows.some(r=>r.s>0);
   const cls=!any?'':meets?'good':ws>=60?'warn':'bad';
-  let h='<div class="card verdict '+cls+'"><div class="vh"><div class="vs">'+(any?total:'–')+'</div><div><div class="vn">Estimated effectiveness &middot; '+esc(name)+' at '+esc(t.n)+'</div><h2>'+
-    (!any?'Enter the employee’s working stats':meets?'Meets this position’s requirements':'Below the requirement on '+rows.filter(r=>r.s<r.q.req).map(r=>r.q.name).join(' and '))+'</h2></div></div>'+
-    '<p>'+(any?'Working stats <b>'+ws+'</b>'+(settled?' + settled in <b>'+settled+'</b>':'')+(nums.merit?' + merits <b>'+nums.merit+'</b>':'')+(nums.mgmt?' + management <b>'+nums.mgmt+'</b>':'')+(nums.add?' − addiction <b>'+Math.abs(nums.add)+'</b>':'')+(nums.other?' '+(nums.other>0?'+':'−')+' other <b>'+Math.abs(nums.other)+'</b>':'')+' = <b>'+total+'</b>.':'Type the stats into the boxes above; the number updates as you type.')+'</p></div>';
+  let h='<div class="card verdict '+cls+'"><h2>Estimated effectiveness</h2><div class="tablewrap"><table class="emp"><thead><tr><th class="l">Effectiveness</th><th>Stats (M/I/E)</th><th>Days</th><th class="l">Position</th></tr></thead><tbody><tr><td class="l">'+(any?effCell(total):'<span class="dim">enter the stats</span>')+'</td><td>'+stTxt+'</td><td>'+daysTxt+'</td><td class="l">'+esc(name)+'</td></tr></tbody></table></div>'+
+    '<p><b>'+(!any?'Enter the employee\u2019s working stats.':meets?'Meets this position\u2019s requirements.':'Below the requirement on '+rows.filter(r=>r.s<r.q.req).map(r=>r.q.name).join(' and ')+'.')+'</b> '+
+    (any?'Working stats <b>'+ws+'</b>'+(settled?' + settled in <b>'+settled+'</b>':'')+(bonus?' '+(bonus>0?'+':'\u2212')+' '+(hasGame?'merits, management and addiction (implied by the in-game number)':'bonuses entered')+' <b>'+Math.abs(bonus)+'</b>':'')+' = <b>'+total+'</b>.':'')+'</p>'+
+    (any&&!hasGame&&!bonus?'<p class="hint">Merits, management and addiction are not visible from stats alone. In a sample of 10 real employees the game number landed from 3 points below to 11 points above this figure (typically about 5 above). Type the number the game shows into the box above to fill that gap in exactly.</p>':'')+'</div>';
   /* breakdown */
   h+='<div class="card"><h2>How the number is built</h2><div class="tablewrap"><table><thead><tr><th class="l">Part</th><th>Employee</th><th>Position needs</th><th>% of requirement</th><th>Points</th></tr></thead><tbody>'+
    rows.map(r=>'<tr><td class="l">'+r.q.name+' ('+r.q.ab+')'+(r===rows[0]?' <span class="badge">primary</span>':' <span class="badge">secondary</span>')+'</td><td>'+num(Math.round(r.s))+'</td><td>'+num(r.q.req)+'</td><td>'+(r.s>0?Math.round(100*r.s/r.q.req)+'%':'0%')+'</td><td><b>'+r.pts+'</b></td></tr>').join('')+
    '<tr><td class="l"><b>Working stats</b></td><td></td><td></td><td></td><td><b>'+ws+'</b></td></tr>'+
    '<tr><td class="l">Settled in <span class="dim">(estimate from days)</span></td><td>'+num(nums.days)+' days</td><td></td><td></td><td>'+settled+'</td></tr>'+
-   '<tr><td class="l">Merits</td><td colspan="3"></td><td>'+nums.merit+'</td></tr><tr><td class="l">Management</td><td colspan="3"></td><td>'+nums.mgmt+'</td></tr>'+
-   '<tr><td class="l">Addiction</td><td colspan="3"></td><td>'+(nums.add?'−'+Math.abs(nums.add):0)+'</td></tr><tr><td class="l">Other</td><td colspan="3"></td><td>'+nums.other+'</td></tr>'+
+   (hasGame?'<tr><td class="l">Merits, management, addiction <span class="dim">(implied by the in-game number)</span></td><td colspan="3"></td><td>'+(bonus>0?'+':'')+bonus+'</td></tr>':'<tr><td class="l">Merits</td><td colspan="3"></td><td>'+nums.merit+'</td></tr><tr><td class="l">Management</td><td colspan="3"></td><td>'+nums.mgmt+'</td></tr>'+
+   '<tr><td class="l">Addiction</td><td colspan="3"></td><td>'+(nums.add?'−'+Math.abs(nums.add):0)+'</td></tr><tr><td class="l">Other</td><td colspan="3"></td><td>'+nums.other+'</td></tr>')+
    '<tr><td class="l"><b>Estimated total</b></td><td colspan="3"></td><td><b>'+(any?total:'–')+'</b></td></tr></tbody></table></div>'+
    '<p class="hint">Each stat scores up to 45 points at the requirement, then 5 more points for every doubling above it (so two stats at the requirement = 90 working-stats points). The settled-in figure follows the pattern seen in real employee cards (days in company minus 1, up to 10); Torn does not publish it. Merits, management, addiction, director education and inactivity are read off the employee’s effectiveness breakdown in the game and entered by hand here.</p></div>';
   /* what stats are worth */
@@ -665,9 +678,9 @@ function calcUpdate(){
    '</tbody></table></div><p class="hint">'+'Working as '+esc(name)+' adds about '+ps.map(q=>q.gain+' '+q.ab).join(' and ')+' a day'+(p[6]&&p[6]!=='None'?'. Special ability: '+esc(p[6])+'.':'.')+'</p></div>';
   /* best positions for these stats */
   if(any){
-    const all=Object.keys(t.p).map(n=>({n:n,p:t.p[n],ws:wsPoints(t.p[n],vals)})).sort((a,b)=>b.ws-a.ws||a.n.localeCompare(b.n));
-    h+='<div class="card"><h2>Best fit at '+esc(t.n)+' for these stats</h2><div class="tablewrap"><table><thead><tr><th class="l">Position</th><th class="l">Uses</th><th>Working-stats points</th></tr></thead><tbody>'+
-     all.map(r=>'<tr'+(r.n===name?' style="background:var(--accent-soft)"':'')+'><td class="l">'+esc(r.n)+'</td><td class="l dim">'+posStats(r.p).map(q=>q.ab).join(' + ')+'</td><td><b>'+r.ws+'</b></td></tr>').join('')+
+    const all=Object.keys(t.p).map(n=>({n:n,p:t.p[n],ws:wsPoints(t.p[n],vals)})).map(r=>{r.tot=r.ws+settled+bonus;return r}).sort((a,b)=>b.tot-a.tot||a.n.localeCompare(b.n));
+    h+='<div class="card"><h2>Best fit at '+esc(t.n)+' for these stats</h2><div class="tablewrap"><table><thead><tr><th class="l">Position</th><th class="l">Uses</th><th>Working-stats points</th><th class="l">Effectiveness (est.)</th></tr></thead><tbody>'+
+     all.map(r=>'<tr'+(r.n===name?' style="background:var(--accent-soft)"':'')+'><td class="l">'+esc(r.n)+'</td><td class="l dim">'+posStats(r.p).map(q=>q.ab).join(' + ')+'</td><td><b>'+r.ws+'</b></td><td class="l">'+effCell(r.tot)+'</td></tr>').join('')+
      '</tbody></table></div><p class="hint">Uses the three stat boxes above, so enter all three working stats to compare every position. Position special abilities are not scored.</p></div>';
   }
   $('#calcRes').innerHTML=h;
