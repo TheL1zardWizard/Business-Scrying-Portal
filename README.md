@@ -23,6 +23,9 @@ purpose, so the app can never do more than read. The key must belong to the play
 
 - **My company**: a verdict (secure, thin margin, at risk), where you sit against companies at your star, which star
   your income and customers actually look like, what you need per day to hold or climb, and a plain list of what to do.
+- **Employee calculator**: pick a position (the list follows the company type selected at the top, so an Adult Novelties
+  filter only offers Adult Novelties positions), type the employee's three working stats, and get an estimated effectiveness
+  number with a full breakdown, what doubling the stats is worth, and the best-fitting position for those stats.
 - **Weekly / Daily** switch in the header, applied to the ladder, ranges, watchlist, explorer and all-types views.
 - **Company type** selector across all 39 types, **Drivers** (which measurable metrics track stars), **All types** heat table.
 - **Refresh on demand** (Data tab): re-collects every rated company of the selected type, or of all 39 types, from Torn's
@@ -60,6 +63,11 @@ never opens more than one refresh at a time, and never scrapes torn.com pages.
   Until then, demotion lines are inferred from where current holders sit.
 - Torn bases stars on gross profit and re-rates companies every Sunday. It also caps the top star by lifetime gross
   revenue, which is not public and not modelled here. No one outside Torn knows the exact formula.
+- The Employee calculator is an estimate. The working-stats part uses the formula on Torn's wiki (Working Stats). The
+  "settled in" part follows the pattern seen on real employee cards (days in company minus 1, up to 10) and is not published
+  by Torn. Merits, management, addiction, director education and inactivity are typed in by hand from the employee's
+  effectiveness breakdown, and director education and inactivity are not modelled. Position requirements were bundled on
+  Nov 9, 2026 and Torn can change them.
 - Popularity, efficiency, environment, trains and ad budget are only visible for your own company. They are shown as
   context in the advice, not used to compute the star.
 - Weekly "what it takes" projections assume the day that drops out of your week equals your weekly average, unless you have logged seven daily pulls that add up to your weekly figure. It is an estimate.
